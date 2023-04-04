@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>622</width>
-    <height>324</height>
+    <width>667</width>
+    <height>372</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -300,6 +300,16 @@
           </widget>
          </item>
          <item>
+          <widget class="QLabel" name="label_7">
+           <property name="text">
+            <string>Prefix</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="linePrefix2"/>
+         </item>
+         <item>
           <widget class="QLabel" name="label_6">
            <property name="text">
             <string>URL Base</string>
@@ -307,7 +317,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="lineEdit"/>
+          <widget class="QLineEdit" name="lineURLBase"/>
          </item>
         </layout>
        </item>
