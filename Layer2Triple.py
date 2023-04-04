@@ -23,13 +23,34 @@
 """
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtWidgets import QAction, QTableWidgetItem, QTableWidget, QCheckBox, QComboBox, QLineEdit, QFileDialog
 
 # Initialize Qt resources from file resources.py
 from .resources import *
 # Import the code for the dialog
 from .Layer2Triple_dialog import Layer2TripleDialog
 import os.path
+
+
+import uuid 
+
+from functools import partial
+
+import re
+
+from rdflib import Namespace, Literal, URIRef,RDF, Graph
+
+from rdflib.namespace import DC, FOAF
+
+from simpot import serialize_to_rdf, serialize_to_rdf_file, RdfsClass, BNamespace, graph
+
+ 
+namespaces = {
+    #ta dando error aqui
+    #'cell': (Namespace("http://purl.org/ontology/dbcells/cells#"), 'ttl'),
+    'geo' : (Namespace ("http://www.opengis.net/ont/geosparql"), 'xml'),
+    'sdmx' : (Namespace ("http://purl.org/linked-data/sdmx/2009/dimension#"), 'ttl'),
+}
 
 
 class Layer2Triple:
@@ -66,6 +87,71 @@ class Layer2Triple:
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
         self.first_start = None
+
+        self.concepts = []
+        self.fields_name = []
+
+        self.load_vocabularies()
+
+    def load_vocabularies(self):
+        for key, value in namespaces.items():
+            self.load_vocabulary(key, str(value[0]), value[1])
+
+    def load_vocabulary(self, prefix, namespace, format):
+        g = Graph()
+        g.parse(namespace, format=format)
+        q = """
+            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            PREFIX owl: <http://www.w3.org/2002/07/owl#>
+
+            SELECT ?p
+            WHERE 
+            {
+               { ?p rdf:type owl:DatatypeProperty} UNION
+               { ?p rdf:type owl:ObjectProperty} UNION
+               { ?p rdf:type rdf:Property}    
+            }
+        """
+
+        # Apply the query to the graph and iterate through results
+        
+        i = len(self.concepts) # o inicial para adicionar no table attributues
+
+        for r in g.query(q):
+            attr = r["p"].split("#") 
+            name = prefix+":"+attr[1]
+            self.concepts.append(name)
+        
+        if prefix not in namespaces:
+            print (prefix, namespace)
+            namespaces[prefix] = (Namespace(namespace), format)
+
+    def load_fill(self):
+        #namespace = "http://purl.org/ontology/dbcells/cells#"
+        format = self.dlg.comboFormat.currentText()
+        namespace = self.dlg.lineURL.text()
+        prefix = self.dlg.linePrefix.text()
+        start = len (self.concepts)
+        self.load_vocabulary(prefix, namespace, format)
+        self.fill_table(start)
+
+    def fill_table (self, start):
+        self.dlg.tableAttributes.setRowCount(len(self.concepts))
+        self.dlg.tableAttributes.setColumnCount(3)
+        self.dlg.tableAttributes.setHorizontalHeaderLabels(["Concept", "Type", "Value"])
+
+
+        for c in self.concepts[start:]:
+            self.dlg.tableAttributes.setCellWidget(start, 0, QCheckBox( c))
+            comboBox = QComboBox()
+            comboBox.textActivated.connect(partial(self.combo_changed, start))
+            comboBox.addItem("Constant Value")
+            comboBox.addItem("Layer Attribute")
+            comboBox.addItem("Vocabulary")
+            self.dlg.tableAttributes.setCellWidget(start, 1, comboBox)
+            self.dlg.tableAttributes.setCellWidget(start, 2, QLineEdit())
+            #self.dlg.tableAttributes.setCellWidget(start, 1, self.attributes_combo())
+            start += 1
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -189,6 +275,8 @@ class Layer2Triple:
             self.first_start = False
             self.dlg = Layer2TripleDialog()
 
+            self.fill_table(0)
+
         # show the dialog
         self.dlg.show()
         # Run the dialog event loop
@@ -198,3 +286,19 @@ class Layer2Triple:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
             pass
+
+
+    def combo_changed(self,row, s):
+        if (s == "Layer Attribute"):
+            self.dlg.tableAttributes.setCellWidget(row, 2, self.attributes_combo())
+        elif (s == "Vocabulary"):
+            self.dlg.tableAttributes.setCellWidget(row, 2, self.vocabularies_combo())
+        else:
+            self.dlg.tableAttributes.setCellWidget(row, 2, QLineEdit())
+
+    def toURL (self, str):
+        rdf_attr = str
+        rdf = rdf_attr.split(":")
+        rdf_attr = rdf[1]
+        namespace = namespaces[rdf[0]][0]
+        return namespace[rdf_attr]
