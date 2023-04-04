@@ -44,7 +44,6 @@ from rdflib import Namespace, Literal, URIRef,RDF, Graph
 
 from rdflib.namespace import DC, FOAF
 
-from simpot import serialize_to_rdf, serialize_to_rdf_file, RdfsClass, BNamespace, graph
 
  
 namespaces = {
