@@ -448,7 +448,13 @@ class Layer2Triple:
                         triple[key] = feature[key]
                     
             
-                    triples[str(uuid.uuid4())] = triple
+                   #triples[str(uuid.uuid4())] = triple
+                    if self.dlg.comboID.currentText() == "Layer Attribute":
+                        attr = feature [self.dlg.comboAttributeID.currentText()]
+                        triples[attr] = triple
+                    else:
+                        triples[str(uuid.uuid4())] = triple
+
 
 
             g = Graph()

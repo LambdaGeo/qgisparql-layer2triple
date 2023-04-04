@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '/home/sergio/.local/share/QGIS/QGIS3/profiles/default/python/plugins/layer2triple/Layer2Triple_dialog_base.ui'
+# Form implementation generated from reading ui file '/home/sergio/.local/share/QGIS/QGIS3/profiles/default/python/plugins/qgisparql-layer2triple/Layer2Triple_dialog_base.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.6
 #
