@@ -61,7 +61,7 @@ class Layer2Triple:
 
         # Declare instance attributes
         self.actions = []
-        self.menu = self.tr(u'&QGISSPARQL-Layer2Triple')
+        self.menu = self.tr(u'&QGISSPARQL')
 
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
@@ -149,7 +149,7 @@ class Layer2Triple:
             self.iface.addToolBarIcon(action)
 
         if add_to_menu:
-            self.iface.addPluginToMenu(
+            self.iface.addPluginToVectorMenu(
                 self.menu,
                 action)
 
@@ -163,7 +163,7 @@ class Layer2Triple:
         icon_path = ':/plugins/Layer2Triple/icon.png'
         self.add_action(
             icon_path,
-            text=self.tr(u''),
+            text=self.tr(u'Layer2Triple'),
             callback=self.run,
             parent=self.iface.mainWindow())
 
@@ -174,8 +174,8 @@ class Layer2Triple:
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
-            self.iface.removePluginMenu(
-                self.tr(u'&QGISSPARQL-Layer2Triple'),
+            self.iface.removePluginVectorMenu(
+                self.tr(u'&QGISSPARQL'),
                 action)
             self.iface.removeToolBarIcon(action)
 
