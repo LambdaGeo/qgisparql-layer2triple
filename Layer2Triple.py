@@ -154,7 +154,6 @@ class Layer2Triple:
             self.concepts.append(name)
         
         if prefix not in namespaces:
-            print (prefix, namespace)
             namespaces[prefix] = (Namespace(namespace), format)
 
     def load_fill(self):
@@ -416,7 +415,7 @@ class Layer2Triple:
                         combo = self.dlg.tableAttributes.cellWidget(row, 2)
                         attribute = combo.currentText()
                         saveAttrs[attribute] = rdf_attr
-                        print ("url_rdf",url_rdf, type(url_rdf))
+                        #print ("url_rdf",url_rdf, type(url_rdf))
                         mVocab[attribute] =  url_rdf
                     elif (combo_type.currentText() == "Vocabulary"):
                         combo = self.dlg.tableAttributes.cellWidget(row, 2)
@@ -468,7 +467,7 @@ class Layer2Triple:
                 attr = key
                 value = save_constants[key]
                 predicate = mVocab[attr]
-                print (type(value))
+                #print (type(value))
                 if (isinstance(value, URIRef)):
                     object = value
                 else:
@@ -480,7 +479,7 @@ class Layer2Triple:
 
             for prefix, name in namespaces.items():
                 g.bind(prefix,name[0])
-                print (prefix, name[0])
+                #print (prefix, name[0])
 
             for id, attributes in triples.items():
                 subject = mainNamespace[id]
@@ -491,7 +490,7 @@ class Layer2Triple:
             
                 for attr, value in attributes.items():
                     predicate = mVocab[attr]
-                    print ("predicate",predicate, type(predicate))
+                    #print ("predicate",predicate, type(predicate))
                     object = Literal(value)
                     if (validade_url(value)): # talvez deveria ver pelo schema
                         object = URIRef(value)
@@ -499,7 +498,7 @@ class Layer2Triple:
                     g.add((subject, predicate, object))
 
             s = g.serialize(format="turtle")
-            print(s)   
+            #print(s)   
             
             f = open(path,"w+",encoding="utf-8") 
             print ("saving ..."+path)
