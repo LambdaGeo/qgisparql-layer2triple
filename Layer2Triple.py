@@ -25,6 +25,8 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QTableWidgetItem, QTableWidget, QCheckBox, QComboBox, QLineEdit, QFileDialog
 
+from qgis.core import QgsProject, Qgis, QgsVectorLayer, QgsRasterLayer
+
 # Initialize Qt resources from file resources.py
 from .resources import *
 # Import the code for the dialog
@@ -47,7 +49,7 @@ from simpot import serialize_to_rdf, serialize_to_rdf_file, RdfsClass, BNamespac
  
 namespaces = {
     #ta dando error aqui
-    #'cell': (Namespace("http://purl.org/ontology/dbcells/cells#"), 'ttl'),
+    'dbc': (Namespace("http://www.purl.org/linked-data/dbcells#"), 'ttl'),
     'geo' : (Namespace ("http://www.opengis.net/ont/geosparql"), 'xml'),
     'sdmx' : (Namespace ("http://purl.org/linked-data/sdmx/2009/dimension#"), 'ttl'),
 }
@@ -107,6 +109,7 @@ class Layer2Triple:
             SELECT ?p
             WHERE 
             {
+                { ?p rdf:type owl:Class} UNION
                { ?p rdf:type owl:DatatypeProperty} UNION
                { ?p rdf:type owl:ObjectProperty} UNION
                { ?p rdf:type rdf:Property}    
@@ -275,7 +278,10 @@ class Layer2Triple:
             self.first_start = False
             self.dlg = Layer2TripleDialog()
 
+            self.dlg.button_load_layer.clicked.connect(self.load_fields)
             self.fill_table(0)
+
+        self.update_comboLayer()
 
         # show the dialog
         self.dlg.show()
@@ -288,6 +294,37 @@ class Layer2Triple:
             pass
 
 
+    def load_fields(self):
+        
+        #try:
+            self.layer = QgsProject.instance().mapLayersByName(self.dlg.comboLayer.currentText())[0]
+            self.fields_name = []        
+
+            fields = self.layer.fields()
+            for field in fields:
+                self.fields_name.append(field.name())
+
+            self.fill_table(0)
+
+            self.iface.messageBar().pushMessage(
+                "Success", "Load Layer fields",
+                level=Qgis.Success, duration=3
+            )
+        #except:
+            
+         #   self.iface.messageBar().pushMessage(
+         #   "Error", "No layer loading",
+         #   level=Qgis.Success, duration=3)
+
+    def update_comboLayer(self):
+
+        self.dlg.comboLayer.clear()
+
+        for layer in QgsProject.instance().mapLayers().values():
+            if type(layer) == QgsVectorLayer:
+                self.dlg.comboLayer.addItem(layer.name())
+                
+
     def combo_changed(self,row, s):
         if (s == "Layer Attribute"):
             self.dlg.tableAttributes.setCellWidget(row, 2, self.attributes_combo())
@@ -295,6 +332,19 @@ class Layer2Triple:
             self.dlg.tableAttributes.setCellWidget(row, 2, self.vocabularies_combo())
         else:
             self.dlg.tableAttributes.setCellWidget(row, 2, QLineEdit())
+
+
+    def attributes_combo(self):
+        comboBox = QComboBox()
+        for attr in self.fields_name:
+            comboBox.addItem(attr)
+        return comboBox
+
+    def vocabularies_combo(self):
+        comboBox = QComboBox()
+        for c in self.concepts:
+            comboBox.addItem(c)
+        return comboBox
 
     def toURL (self, str):
         rdf_attr = str
