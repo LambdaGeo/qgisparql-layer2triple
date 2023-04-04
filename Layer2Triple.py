@@ -54,6 +54,34 @@ namespaces = {
     'sdmx' : (Namespace ("http://purl.org/linked-data/sdmx/2009/dimension#"), 'ttl'),
 }
 
+def validade_url(s):
+    if (type(s) != str ):
+        return False
+
+    regex = re.compile(
+        r'^(?:http|ftp)s?://' # http:// or https://
+        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' #domain...
+        r'localhost|' #localhost...
+        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
+        r'(?::\d+)?' # optional port
+        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+
+    return (re.match(regex, s) is not None) 
+
+
+def parse_ifs(value):
+  if value is None:
+      return ""
+  try:
+      n = int(value)
+      return n
+  except:
+      try: 
+        n = float (value)
+        return n
+      except:
+        return value
+
 
 class Layer2Triple:
     """QGIS Plugin Implementation."""
@@ -278,6 +306,7 @@ class Layer2Triple:
             self.first_start = False
             self.dlg = Layer2TripleDialog()
 
+            self.dlg.buttonBox.accepted.connect(self.save_file)
             self.dlg.button_load_layer.clicked.connect(self.load_fields)
             self.fill_table(0)
 
@@ -352,3 +381,108 @@ class Layer2Triple:
         rdf_attr = rdf[1]
         namespace = namespaces[rdf[0]][0]
         return namespace[rdf_attr]
+
+
+    def save_file(self):
+            path =str(QFileDialog.getSaveFileName(caption="Defining output file", filter="Terse RDF Triple Language(*.ttl)")[0])
+            
+            mVocab = {}
+            saveAttrs = {}
+            save_constants = {}
+            save_vocabs = {}
+            
+            for row in range(self.dlg.tableAttributes.rowCount()): 
+                check = self.dlg.tableAttributes.cellWidget(row, 0) 
+                if check.isChecked():
+                    rdf_attr = check.text()
+                    rdf = rdf_attr.split(":")
+                    rdf_attr = rdf[1]
+                    namespace = namespaces[rdf[0]][0]
+                    url_rdf = namespace[rdf_attr]
+
+                    combo_type = self.dlg.tableAttributes.cellWidget(row, 1)
+
+                    if (combo_type.currentText() == "Layer Attribute"):
+                        combo = self.dlg.tableAttributes.cellWidget(row, 2)
+                        attribute = combo.currentText()
+                        saveAttrs[attribute] = rdf_attr
+                        mVocab[attribute] =  url_rdf
+                    elif (combo_type.currentText() == "Vocabulary"):
+                        combo = self.dlg.tableAttributes.cellWidget(row, 2)
+                        attribute = combo.currentText()
+                        url_v = self.toURL(attribute)
+                        save_constants[rdf_attr] = url_v
+                        mVocab[rdf_attr] =  url_rdf   
+                    else:
+                        line_edit = self.dlg.tableAttributes.cellWidget(row, 2)
+                        save_constants[rdf_attr] = parse_ifs(line_edit.text())
+                        mVocab[rdf_attr] =  url_rdf         
+
+            if self.dlg.checkSelected.isChecked():
+                    features = self.layer.selectedFeatures() 
+            else:
+                    features = self.layer.getFeatures()
+
+            observations = {}
+            for feature in features:
+
+                    obs = {  }
+
+
+                    for key in saveAttrs:
+                        obs[key] = feature[key]
+                    
+            
+                    observations[str(uuid.uuid4())] = obs
+
+
+            g = Graph()
+          
+            
+  
+            mainNamespace = Namespace("https://purl.org/dbcells/epsg4326#")
+            g.bind("main", mainNamespace)
+
+            for key in save_constants:
+                attr = key
+                value = save_constants[key]
+                predicate = mVocab[attr]
+                print (type(value))
+                if (isinstance(value, URIRef)):
+                    object = value
+                else:
+                    object = Literal(value)
+                    if (validade_url(value)): # talvez deveria ver pelo schema
+                        object = URIRef(value)
+                    
+
+
+            for prefix, name in namespaces.items():
+                g.bind(prefix,name[0])
+                print (prefix, name[0])
+
+            for id, attributes in observations.items():
+                subject = mainNamespace[id]
+                g.add((subject, RDF.type, QB.Observation))
+            
+                for attr, value in attributes.items():
+                    predicate = mVocab[attr]
+                    object = Literal(value)
+                    if (validade_url(value)): # talvez deveria ver pelo schema
+                        object = URIRef(value)
+                    
+                    g.add((subject, predicate, object))
+
+            s = g.serialize(format="turtle")
+            print(s)   
+            
+            f = open(path,"w+",encoding="utf-8") 
+            print ("saving ..."+path)
+            f.write (s)
+            f.close()
+
+            self.iface.messageBar().pushMessage(
+                    "Success", "Output file written at " + path,
+                    level=Qgis.Success, duration=3
+             )
+             
