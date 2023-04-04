@@ -247,8 +247,11 @@
           </widget>
          </item>
          <item>
-          <widget class="QComboBox" name="comboBox">
+          <widget class="QComboBox" name="comboAttributeID">
            <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="editable">
             <bool>false</bool>
            </property>
           </widget>
@@ -292,7 +295,7 @@
          <item>
           <widget class="QComboBox" name="comboRDFType">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
@@ -307,7 +310,17 @@
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="linePrefix2"/>
+          <widget class="QLineEdit" name="linePrefix2">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>cell</string>
+           </property>
+          </widget>
          </item>
          <item>
           <widget class="QLabel" name="label_6">
@@ -317,7 +330,11 @@
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="lineURLBase"/>
+          <widget class="QLineEdit" name="lineURLBase">
+           <property name="text">
+            <string>https://purl.org/dbcells/epsg4326#</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>

@@ -166,7 +166,13 @@ class Layer2Triple:
         self.load_vocabulary(prefix, namespace, format)
         self.fill_table(start)
 
+
     def fill_table (self, start):
+
+                
+        for c in self.concepts:
+            self.dlg.comboRDFType.addItem(c)
+
         self.dlg.tableAttributes.setRowCount(len(self.concepts))
         self.dlg.tableAttributes.setColumnCount(3)
         self.dlg.tableAttributes.setHorizontalHeaderLabels(["Concept", "Type", "Value"])
@@ -306,6 +312,7 @@ class Layer2Triple:
             self.first_start = False
             self.dlg = Layer2TripleDialog()
 
+            self.dlg.buttonLoad.clicked.connect(self.load_fill)
             self.dlg.buttonBox.accepted.connect(self.save_file)
             self.dlg.button_load_layer.clicked.connect(self.load_fields)
             self.fill_table(0)
@@ -334,6 +341,9 @@ class Layer2Triple:
                 self.fields_name.append(field.name())
 
             self.fill_table(0)
+
+            for attr in self.fields_name:
+                self.dlg.comboAttributeID.addItem(attr)
 
             self.iface.messageBar().pushMessage(
                 "Success", "Load Layer fields",
@@ -445,9 +455,13 @@ class Layer2Triple:
             g = Graph()
           
             
-  
-            mainNamespace = Namespace("https://purl.org/dbcells/epsg4326#")
-            g.bind("main", mainNamespace)
+            url_main = self.dlg.lineURLBase.text()
+            mainNamespace = Namespace(url_main)
+            prefix_main = self.dlg.linePrefix2.text()
+            g.bind(prefix_main, mainNamespace)
+
+
+            g.bind("geo", Namespace("http://www.opengis.net/ont/geosparql#"))
 
 
             for key in save_constants:
@@ -471,6 +485,9 @@ class Layer2Triple:
             for id, attributes in triples.items():
                 subject = mainNamespace[id]
                 #g.add((subject, RDF.type, QB.Observation))
+                attribute = self.dlg.comboRDFType.currentText()
+                url_v = self.toURL(attribute)
+                g.add((subject, RDF.type, url_v))
             
                 for attr, value in attributes.items():
                     predicate = mVocab[attr]
