@@ -25,7 +25,7 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QTableWidgetItem, QTableWidget, QCheckBox, QComboBox, QLineEdit, QFileDialog
 
-from qgis.core import QgsProject, Qgis, QgsVectorLayer, QgsRasterLayer
+from qgis.core import QgsProject, Qgis, QgsVectorLayer, QgsRasterLayer,   QgsMultiPolygon
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -406,6 +406,7 @@ class Layer2Triple:
                         combo = self.dlg.tableAttributes.cellWidget(row, 2)
                         attribute = combo.currentText()
                         saveAttrs[attribute] = rdf_attr
+                        print ("url_rdf",url_rdf, type(url_rdf))
                         mVocab[attribute] =  url_rdf
                     elif (combo_type.currentText() == "Vocabulary"):
                         combo = self.dlg.tableAttributes.cellWidget(row, 2)
@@ -423,17 +424,22 @@ class Layer2Triple:
             else:
                     features = self.layer.getFeatures()
 
-            observations = {}
+            triples = {}
             for feature in features:
 
-                    obs = {  }
+                    triple = {  }
+                    mVocab['asWkt'] = URIRef("http://www.opengis.net/ont/geosparql#asWKT")
+                    if self.dlg.checkGeometries.isChecked():
+                        pol = QgsMultiPolygon()
+                        pol.fromWkt (feature.geometry().asWkt())
+                        triple['asWkt'] = pol.polygonN(0).asWkt()
 
 
                     for key in saveAttrs:
-                        obs[key] = feature[key]
+                        triple[key] = feature[key]
                     
             
-                    observations[str(uuid.uuid4())] = obs
+                    triples[str(uuid.uuid4())] = triple
 
 
             g = Graph()
@@ -442,6 +448,7 @@ class Layer2Triple:
   
             mainNamespace = Namespace("https://purl.org/dbcells/epsg4326#")
             g.bind("main", mainNamespace)
+
 
             for key in save_constants:
                 attr = key
@@ -461,12 +468,13 @@ class Layer2Triple:
                 g.bind(prefix,name[0])
                 print (prefix, name[0])
 
-            for id, attributes in observations.items():
+            for id, attributes in triples.items():
                 subject = mainNamespace[id]
-                g.add((subject, RDF.type, QB.Observation))
+                #g.add((subject, RDF.type, QB.Observation))
             
                 for attr, value in attributes.items():
                     predicate = mVocab[attr]
+                    print ("predicate",predicate, type(predicate))
                     object = Literal(value)
                     if (validade_url(value)): # talvez deveria ver pelo schema
                         object = URIRef(value)
