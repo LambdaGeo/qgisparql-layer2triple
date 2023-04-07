@@ -45,13 +45,29 @@ from rdflib import Namespace, Literal, URIRef,RDF, Graph
 from rdflib.namespace import DC, FOAF
 
 
+import json
+
+
  
-namespaces = {
-    #ta dando error aqui
-    'dbc': (Namespace("http://www.purl.org/linked-data/dbcells#"), 'ttl'),
-    'geo' : (Namespace ("http://www.opengis.net/ont/geosparql"), 'xml'),
-    'sdmx' : (Namespace ("http://purl.org/linked-data/sdmx/2009/dimension#"), 'ttl'),
-}
+settings = {
+
+    "TRIPLEPREFIX" : "obs",
+    "TRIPLEURL" : "https://purl.org/dbcells/observation#",
+    "TRIPLETYPE" : "qb:Observation",
+
+    "NAMESPACES" : {
+        #'dbc': (Namespace("http://www.purl.org/linked-data/dbcells#"), 'ttl'),
+        #'geo' : (Namespace ("http://www.opengis.net/ont/geosparql"), 'xml'),
+        #'sdmx' : (Namespace ("http://purl.org/linked-data/sdmx/2009/dimension#"), 'ttl'),
+        #'dbc-attribute' : (Namespace ("http://www.purl.org/linked-data/dbcells/attribute#"), "ttl"),
+        #'dbc-measure' : (Namespace ("http://www.purl.org/linked-data/dbcells/measure#"), "ttl"),
+        #'dbc-code' : (Namespace ("http://www.purl.org/linked-data/dbcells/code#"), "ttl"),
+        #'qb' : (Namespace ("http://purl.org/linked-data/cube#"), "ttl")
+    }
+ }
+
+# depois vou remover essa variavel, evitar isso
+namespaces = settings["NAMESPACES"]
 
 def validade_url(s):
     if (type(s) != str ):
@@ -301,6 +317,14 @@ class Layer2Triple:
             self.iface.removeToolBarIcon(action)
 
 
+    def update_vocabularies(self):
+        
+        self.fill_table(0)
+        if ("TRIPLEPREFIX" in settings):
+            self.dlg.lineURLBase.setText(settings["TRIPLEURL"])
+            self.dlg.linePrefix2.setText(settings["TRIPLEPREFIX"])
+            self.dlg.comboRDFType.setCurrentText(settings["TRIPLETYPE"])
+
     def run(self):
         """Run method that performs all the real work"""
 
@@ -313,19 +337,23 @@ class Layer2Triple:
             self.dlg.buttonLoad.clicked.connect(self.load_fill)
             self.dlg.buttonBox.accepted.connect(self.save_file)
             self.dlg.button_load_layer.clicked.connect(self.load_fields)
-            self.fill_table(0)
+            self.dlg.actionSave.triggered.connect(self.save_setting)
+            self.dlg.actionOpen.triggered.connect(self.open_setting)
+
+            self.update_vocabularies()
+
 
         self.update_comboLayer()
 
         # show the dialog
         self.dlg.show()
         # Run the dialog event loop
-        result = self.dlg.exec_()
+        #result = self.dlg.exec_()
         # See if OK was pressed
-        if result:
+        #if result:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
-            pass
+        #    pass
 
 
     def load_fields(self):
@@ -389,6 +417,27 @@ class Layer2Triple:
         rdf_attr = rdf[1]
         namespace = namespaces[rdf[0]][0]
         return namespace[rdf_attr]
+
+
+    def save_setting(self):
+            path =str(QFileDialog.getSaveFileName(caption="Defining output file", filter="JSON settings file(*.json)")[0])
+            with open(path, "w") as file:
+                # Grava o dicionário settings no arquivo JSON
+                json.dump(settings, file)
+
+    def open_setting(self):
+            global namespaces
+            global settings
+
+            path =str(QFileDialog.getOpenFileName(caption="Defining input file", filter="JSON settings file(*.json)")[0])
+            with open(path, "r") as file:
+                # Grava o dicionário settings no arquivo JSON
+                print ("openning settings")
+                content = file.read()
+                settings = json.loads(content)
+                namespaces = settings["NAMESPACES"]
+                self.load_vocabularies()
+                self.update_vocabularies()
 
 
     def save_file(self):
@@ -461,25 +510,12 @@ class Layer2Triple:
             
             url_main = self.dlg.lineURLBase.text()
             mainNamespace = Namespace(url_main)
+            
             prefix_main = self.dlg.linePrefix2.text()
             g.bind(prefix_main, mainNamespace)
 
 
             g.bind("geo", Namespace("http://www.opengis.net/ont/geosparql#"))
-
-
-            for key in save_constants:
-                attr = key
-                value = save_constants[key]
-                predicate = mVocab[attr]
-                #print (type(value))
-                if (isinstance(value, URIRef)):
-                    object = value
-                else:
-                    object = Literal(value)
-                    if (validade_url(value)): # talvez deveria ver pelo schema
-                        object = URIRef(value)
-                    
 
 
             for prefix, name in namespaces.items():
@@ -501,6 +537,20 @@ class Layer2Triple:
                         object = URIRef(value)
                     
                     g.add((subject, predicate, object))
+
+                # as constantes deverão ser salvas separadamente, no caso de observations, seria um dataset
+                for key in save_constants:
+                    attr = key
+                    value = save_constants[key]
+                    predicate = mVocab[attr]
+                    if (isinstance(value, URIRef)):
+                        object = value
+                    else:
+                        object = Literal(value)
+                        if (validade_url(value)): # talvez deveria ver pelo schema
+                            object = URIRef(value)
+                    g.add((subject, predicate, object))
+
 
             s = g.serialize(format="turtle")
             #print(s)   
