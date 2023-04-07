@@ -51,6 +51,10 @@ namespaces = {
     'dbc': (Namespace("http://www.purl.org/linked-data/dbcells#"), 'ttl'),
     'geo' : (Namespace ("http://www.opengis.net/ont/geosparql"), 'xml'),
     'sdmx' : (Namespace ("http://purl.org/linked-data/sdmx/2009/dimension#"), 'ttl'),
+    'dbc-attribute' : (Namespace ("http://www.purl.org/linked-data/dbcells/attribute#"), "ttl"),
+    'dbc-measure' : (Namespace ("http://www.purl.org/linked-data/dbcells/measure#"), "ttl"),
+    'dbc-code' : (Namespace ("http://www.purl.org/linked-data/dbcells/code#"), "ttl"),
+    'qb' : (Namespace ("http://purl.org/linked-data/cube#"), "ttl")
 }
 
 def validade_url(s):
@@ -468,20 +472,6 @@ class Layer2Triple:
             g.bind("geo", Namespace("http://www.opengis.net/ont/geosparql#"))
 
 
-            for key in save_constants:
-                attr = key
-                value = save_constants[key]
-                predicate = mVocab[attr]
-                #print (type(value))
-                if (isinstance(value, URIRef)):
-                    object = value
-                else:
-                    object = Literal(value)
-                    if (validade_url(value)): # talvez deveria ver pelo schema
-                        object = URIRef(value)
-                    
-
-
             for prefix, name in namespaces.items():
                 g.bind(prefix,name[0])
                 #print (prefix, name[0])
@@ -501,6 +491,20 @@ class Layer2Triple:
                         object = URIRef(value)
                     
                     g.add((subject, predicate, object))
+
+                # as constantes deverão ser salvas separadamente, no caso de observations, seria um dataset
+                for key in save_constants:
+                    attr = key
+                    value = save_constants[key]
+                    predicate = mVocab[attr]
+                    if (isinstance(value, URIRef)):
+                        object = value
+                    else:
+                        object = Literal(value)
+                        if (validade_url(value)): # talvez deveria ver pelo schema
+                            object = URIRef(value)
+                    g.add((subject, predicate, object))
+
 
             s = g.serialize(format="turtle")
             #print(s)   
