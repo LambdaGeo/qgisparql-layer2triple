@@ -45,6 +45,9 @@ from rdflib import Namespace, Literal, URIRef,RDF, Graph
 from rdflib.namespace import DC, FOAF
 
 
+import json
+
+
  
 settings = {
 
@@ -53,14 +56,13 @@ settings = {
     "TRIPLETYPE" : "qb:Observation",
 
     "NAMESPACES" : {
-        #ta dando error aqui
-        'dbc': (Namespace("http://www.purl.org/linked-data/dbcells#"), 'ttl'),
-        'geo' : (Namespace ("http://www.opengis.net/ont/geosparql"), 'xml'),
-        'sdmx' : (Namespace ("http://purl.org/linked-data/sdmx/2009/dimension#"), 'ttl'),
-        'dbc-attribute' : (Namespace ("http://www.purl.org/linked-data/dbcells/attribute#"), "ttl"),
-        'dbc-measure' : (Namespace ("http://www.purl.org/linked-data/dbcells/measure#"), "ttl"),
+        #'dbc': (Namespace("http://www.purl.org/linked-data/dbcells#"), 'ttl'),
+        #'geo' : (Namespace ("http://www.opengis.net/ont/geosparql"), 'xml'),
+        #'sdmx' : (Namespace ("http://purl.org/linked-data/sdmx/2009/dimension#"), 'ttl'),
+        #'dbc-attribute' : (Namespace ("http://www.purl.org/linked-data/dbcells/attribute#"), "ttl"),
+        #'dbc-measure' : (Namespace ("http://www.purl.org/linked-data/dbcells/measure#"), "ttl"),
         'dbc-code' : (Namespace ("http://www.purl.org/linked-data/dbcells/code#"), "ttl"),
-        'qb' : (Namespace ("http://purl.org/linked-data/cube#"), "ttl")
+        #'qb' : (Namespace ("http://purl.org/linked-data/cube#"), "ttl")
     }
  }
 
