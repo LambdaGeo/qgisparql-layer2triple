@@ -186,6 +186,8 @@ class Layer2Triple:
                 
         for c in self.concepts:
             self.dlg.comboRDFType.addItem(c)
+            self.dlg.comboRDFType_2.addItem(c)
+            self.dlg.comboBoxPredicate.addItem(c)
 
         self.dlg.tableAttributes.setRowCount(len(self.concepts))
         self.dlg.tableAttributes.setColumnCount(3)
@@ -325,6 +327,15 @@ class Layer2Triple:
             self.dlg.linePrefix2.setText(settings["TRIPLEPREFIX"])
             self.dlg.comboRDFType.setCurrentText(settings["TRIPLETYPE"])
 
+
+    def show_group (self):
+        if self.dlg.groupBoxConstants.isVisible():
+            self.dlg.groupBoxConstants.setVisible(False)
+        else:
+            self.dlg.groupBoxConstants.setVisible(True)
+        
+
+
     def run(self):
         """Run method that performs all the real work"""
 
@@ -339,9 +350,13 @@ class Layer2Triple:
             self.dlg.button_load_layer.clicked.connect(self.load_fields)
             self.dlg.actionSave.triggered.connect(self.save_setting)
             self.dlg.actionOpen.triggered.connect(self.open_setting)
+            self.dlg.pushShowGroup.clicked.connect(self.show_group)
+
+            self.dlg.groupBoxConstants.setStyleSheet("QGroupBox { border: 0px; }")
 
             self.update_vocabularies()
 
+        self.dlg.groupBoxConstants.setVisible(False)
 
         self.update_comboLayer()
 
@@ -415,7 +430,10 @@ class Layer2Triple:
         rdf_attr = str
         rdf = rdf_attr.split(":")
         rdf_attr = rdf[1]
+        #print (rdf)
+        #print (namespaces)
         namespace = namespaces[rdf[0]][0]
+        #print (namespace, rdf_attr)
         return namespace[rdf_attr]
 
 
@@ -435,6 +453,9 @@ class Layer2Triple:
                 print ("openning settings")
                 content = file.read()
                 settings = json.loads(content)
+                # eliminar essa gambiarra, considerando que na configuracao so tera a URL
+                settings["NAMESPACES"] = {k: (lambda x: (Namespace(x[0]), x[1]  ))(v) for k, v in  settings["NAMESPACES"].items() } #incluir o namespace
+                print (settings)
                 namespaces = settings["NAMESPACES"]
                 self.load_vocabularies()
                 self.update_vocabularies()
@@ -517,6 +538,36 @@ class Layer2Triple:
 
             g.bind("geo", Namespace("http://www.opengis.net/ont/geosparql#"))
 
+            constants_p_o = []
+            for key in save_constants:
+                    attr = key
+                    value = save_constants[key]
+                    predicate = mVocab[attr]
+                    if (isinstance(value, URIRef)):
+                        object = value
+                    else:
+                        object = Literal(value)
+                        if (validade_url(value)): # talvez deveria ver pelo schema
+                            object = URIRef(value)
+                    constants_p_o.append ((predicate, object))
+
+
+            if self.dlg.checkConstant.isChecked (): # aggregar em um dataset, por exemplo
+                
+                aggregNamespace = Namespace(self.dlg.lineURLBase_2.text())
+            
+                g.bind(self.dlg.linePrefix2_2.text(), aggregNamespace)
+
+                aggregate = aggregNamespace[str(uuid.uuid4())] 
+
+                attribute = self.dlg.comboRDFType_2.currentText()
+                url_aggregate = self.toURL(attribute)
+
+                g.add((aggregate, RDF.type, url_aggregate))
+
+
+                for (p, o) in constants_p_o:
+                    g.add((aggregate,p, o))
 
             for prefix, name in namespaces.items():
                 g.bind(prefix,name[0])
@@ -538,18 +589,15 @@ class Layer2Triple:
                     
                     g.add((subject, predicate, object))
 
-                # as constantes deverão ser salvas separadamente, no caso de observations, seria um dataset
-                for key in save_constants:
-                    attr = key
-                    value = save_constants[key]
-                    predicate = mVocab[attr]
-                    if (isinstance(value, URIRef)):
-                        object = value
-                    else:
-                        object = Literal(value)
-                        if (validade_url(value)): # talvez deveria ver pelo schema
-                            object = URIRef(value)
-                    g.add((subject, predicate, object))
+                QB = Namespace ("http://purl.org/linked-data/cube#")
+
+                if self.dlg.checkConstant.isChecked (): # aggregar em um dataset, por exemplo
+                    attribute_p = self.dlg.comboBoxPredicate.currentText()
+                    url_p = self.toURL(attribute_p)
+                    g.add((subject, url_p, aggregate)) # generalizar
+                else:
+                    for (p, o) in constants_p_o:
+                         g.add((subject,p, o))
 
 
             s = g.serialize(format="turtle")
