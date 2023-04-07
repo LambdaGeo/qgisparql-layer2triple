@@ -46,16 +46,25 @@ from rdflib.namespace import DC, FOAF
 
 
  
-namespaces = {
-    #ta dando error aqui
-    'dbc': (Namespace("http://www.purl.org/linked-data/dbcells#"), 'ttl'),
-    'geo' : (Namespace ("http://www.opengis.net/ont/geosparql"), 'xml'),
-    'sdmx' : (Namespace ("http://purl.org/linked-data/sdmx/2009/dimension#"), 'ttl'),
-    'dbc-attribute' : (Namespace ("http://www.purl.org/linked-data/dbcells/attribute#"), "ttl"),
-    'dbc-measure' : (Namespace ("http://www.purl.org/linked-data/dbcells/measure#"), "ttl"),
-    'dbc-code' : (Namespace ("http://www.purl.org/linked-data/dbcells/code#"), "ttl"),
-    'qb' : (Namespace ("http://purl.org/linked-data/cube#"), "ttl")
-}
+settings = {
+
+    "TRIPLEPREFIX" : "obs",
+    "TRIPLEURL" : "https://purl.org/dbcells/observation#",
+    "TRIPLETYPE" : "qb:Observation",
+
+    "NAMESPACES" : {
+        #ta dando error aqui
+        'dbc': (Namespace("http://www.purl.org/linked-data/dbcells#"), 'ttl'),
+        'geo' : (Namespace ("http://www.opengis.net/ont/geosparql"), 'xml'),
+        'sdmx' : (Namespace ("http://purl.org/linked-data/sdmx/2009/dimension#"), 'ttl'),
+        'dbc-attribute' : (Namespace ("http://www.purl.org/linked-data/dbcells/attribute#"), "ttl"),
+        'dbc-measure' : (Namespace ("http://www.purl.org/linked-data/dbcells/measure#"), "ttl"),
+        'dbc-code' : (Namespace ("http://www.purl.org/linked-data/dbcells/code#"), "ttl"),
+        'qb' : (Namespace ("http://purl.org/linked-data/cube#"), "ttl")
+    }
+ }
+
+namespaces = settings["NAMESPACES"]
 
 def validade_url(s):
     if (type(s) != str ):
@@ -318,6 +327,10 @@ class Layer2Triple:
             self.dlg.buttonBox.accepted.connect(self.save_file)
             self.dlg.button_load_layer.clicked.connect(self.load_fields)
             self.fill_table(0)
+            if ("TRIPLEPREFIX" in settings):
+                self.dlg.lineURLBase.setText(settings["TRIPLEURL"])
+                self.dlg.linePrefix2.setText(settings["TRIPLEPREFIX"])
+                self.dlg.comboRDFType.setCurrentText(settings["TRIPLETYPE"])
 
         self.update_comboLayer()
 
@@ -465,6 +478,7 @@ class Layer2Triple:
             
             url_main = self.dlg.lineURLBase.text()
             mainNamespace = Namespace(url_main)
+            
             prefix_main = self.dlg.linePrefix2.text()
             g.bind(prefix_main, mainNamespace)
 
