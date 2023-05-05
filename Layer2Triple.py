@@ -30,7 +30,8 @@ from qgis.core import QgsProject, Qgis, QgsVectorLayer, QgsRasterLayer,   QgsMul
 # Initialize Qt resources from file resources.py
 from .resources import *
 # Import the code for the dialog
-from .Layer2Triple_main import Layer2TripleDialog
+from .Layer2Triple_main import Layer2TripleMain
+#from .Vocabulary_Dialog_ui import VocabularyDialog
 import os.path
 
 
@@ -345,7 +346,9 @@ class Layer2Triple:
         # Only create GUI ONCE in callback, so that it will only load when the plugin is started
         if self.first_start == True:
             self.first_start = False
-            self.dlg = Layer2TripleDialog()
+            self.dlg = Layer2TripleMain()
+
+            #self.vocab_dlg = VocabularyDialog()
 
             self.dlg.buttonLoad.clicked.connect(self.load_fill)
             self.dlg.buttonBox.accepted.connect(self.save_file)

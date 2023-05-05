@@ -32,10 +32,10 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'Layer2Triple_main_base.ui'))
 
 
-class Layer2TripleDialog(QtWidgets.QMainWindow, FORM_CLASS):
+class Layer2TripleMain(QtWidgets.QMainWindow, FORM_CLASS):
     def __init__(self, parent=None):
         """Constructor."""
-        super(Layer2TripleDialog, self).__init__(parent)
+        super(Layer2TripleMain, self).__init__(parent)
         # Set up the user interface from Designer through FORM_CLASS.
         # After self.setupUi() you can access any designer object by doing
         # self.<objectname>, and you can use autoconnect slots - see
