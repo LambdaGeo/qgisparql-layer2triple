@@ -138,6 +138,8 @@ class Layer2Triple:
 
         self.load_vocabularies()
 
+        #self.vocab_dialog = 
+
     def load_vocabularies(self):
         for key, value in namespaces.items():
             self.load_vocabulary(key, str(value[0]), value[1])
