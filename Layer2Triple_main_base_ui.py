@@ -330,7 +330,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Layer2Triple"))
         self.label_3.setText(_translate("MainWindow", "Layer"))
         self.button_load_layer.setText(_translate("MainWindow", "Load Layer"))
         self.checkSelected.setText(_translate("MainWindow", "Selected features"))
