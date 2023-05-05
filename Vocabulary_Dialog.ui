@@ -107,13 +107,6 @@
        </item>
       </widget>
      </item>
-     <item>
-      <widget class="QToolButton" name="buttonLoad">
-       <property name="text">
-        <string>Load Vocabulary</string>
-       </property>
-      </widget>
-     </item>
     </layout>
    </item>
    <item row="1" column="0">

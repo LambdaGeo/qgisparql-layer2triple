@@ -31,7 +31,7 @@ from qgis.core import QgsProject, Qgis, QgsVectorLayer, QgsRasterLayer,   QgsMul
 from .resources import *
 # Import the code for the dialog
 from .Layer2Triple_main import Layer2TripleMain
-#from .Vocabulary_Dialog_ui import VocabularyDialog
+from .VocabularyDialog import VocabularyDialog
 import os.path
 
 
@@ -173,15 +173,6 @@ class Layer2Triple:
         
         if prefix not in namespaces:
             namespaces[prefix] = (Namespace(namespace), format)
-
-    def load_fill(self):
-        #namespace = "http://purl.org/ontology/dbcells/cells#"
-        format = self.dlg.comboFormat.currentText()
-        namespace = self.dlg.lineURL.text()
-        prefix = self.dlg.linePrefix.text()
-        start = len (self.concepts)
-        self.load_vocabulary(prefix, namespace, format)
-        self.fill_table(start)
 
 
     def fill_table (self, start):
@@ -348,13 +339,17 @@ class Layer2Triple:
             self.first_start = False
             self.dlg = Layer2TripleMain()
 
-            #self.vocab_dlg = VocabularyDialog()
+            self.vocab_dlg = VocabularyDialog()
 
-            self.dlg.buttonLoad.clicked.connect(self.load_fill)
+            #self.dlg.buttonLoad.clicked.connect(handle_dialog_vocabulary)
+
+            self.vocab_dlg.buttonBox.accepted.connect(self.handle_dialog_vocabulary)
             self.dlg.buttonBox.accepted.connect(self.save_file)
             self.dlg.button_load_layer.clicked.connect(self.load_fields)
             self.dlg.actionSave.triggered.connect(self.save_setting)
             self.dlg.actionOpen.triggered.connect(self.open_setting)
+            self.dlg.actionLoad_Vocabulary.triggered.connect(self.show_dialog_vocabulary)
+
             self.dlg.pushShowGroup.clicked.connect(self.show_group)
 
             self.dlg.groupBoxConstants.setStyleSheet("QGroupBox { border: 0px; }")
@@ -375,6 +370,17 @@ class Layer2Triple:
             # substitute with your code.
         #    pass
 
+    def show_dialog_vocabulary(self):
+        self.vocab_dlg.show()
+
+    def handle_dialog_vocabulary(self):
+        format = self.vocab_dlg.comboFormat.currentText()
+        namespace = self.vocab_dlg.lineURL.text()
+        prefix = self.vocab_dlg.linePrefix.text()
+        start = len (self.concepts)
+        print (prefix, namespace, format)
+        self.load_vocabulary(prefix, namespace, format)
+        self.fill_table(start)
 
     def load_fields(self):
         
