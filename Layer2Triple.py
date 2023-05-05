@@ -30,7 +30,7 @@ from qgis.core import QgsProject, Qgis, QgsVectorLayer, QgsRasterLayer,   QgsMul
 # Initialize Qt resources from file resources.py
 from .resources import *
 # Import the code for the dialog
-from .Layer2Triple_dialog import Layer2TripleDialog
+from .Layer2Triple_main import Layer2TripleDialog
 import os.path
 
 
