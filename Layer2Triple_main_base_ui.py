@@ -85,7 +85,7 @@ class Ui_MainWindow(object):
         self.label_4.setObjectName("label_4")
         self.horizontalLayout_2.addWidget(self.label_4)
         self.comboAttributeID = QtWidgets.QComboBox(self.centralwidget)
-        self.comboAttributeID.setEnabled(True)
+        self.comboAttributeID.setEnabled(False)
         self.comboAttributeID.setEditable(False)
         self.comboAttributeID.setObjectName("comboAttributeID")
         self.horizontalLayout_2.addWidget(self.comboAttributeID)

@@ -329,6 +329,11 @@ class Layer2Triple:
             self.dlg.groupBoxConstants.setVisible(True)
         
 
+    def comboID_clicked (self):
+        if self.dlg.comboID.currentText() == "Layer Attribute":
+            self.dlg.comboAttributeID.setEnabled(True)
+        else:
+            self.dlg.comboAttributeID.setEnabled(False)
 
     def run(self):
         """Run method that performs all the real work"""
@@ -355,6 +360,8 @@ class Layer2Triple:
             self.dlg.groupBoxConstants.setStyleSheet("QGroupBox { border: 0px; }")
 
             self.update_vocabularies()
+
+            self.dlg.comboID.textActivated.connect(self.comboID_clicked)
 
         self.dlg.groupBoxConstants.setVisible(False)
 
