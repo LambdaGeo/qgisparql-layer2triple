@@ -23,8 +23,9 @@
 """
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction, QTableWidgetItem, QTableWidget, QCheckBox, QComboBox, QLineEdit, QFileDialog
-
+from PyQt5.QtCore import Qt
+from qgis.PyQt.QtWidgets import QAction, QTableWidgetItem, QTableWidget, QCheckBox, QComboBox, QLineEdit, QFileDialog,QProgressDialog
+import time
 from qgis.core import QgsProject, Qgis, QgsVectorLayer, QgsRasterLayer,   QgsMultiPolygon
 
 # Initialize Qt resources from file resources.py
@@ -313,8 +314,7 @@ class Layer2Triple:
             self.iface.removeToolBarIcon(action)
 
 
-    def update_vocabularies(self):
-        
+    def update_vocabularies(self):        
         self.fill_table(0)
         if ("TRIPLEPREFIX" in settings):
             self.dlg.lineURLBase.setText(settings["TRIPLEURL"])
@@ -350,6 +350,7 @@ class Layer2Triple:
 
             self.vocab_dlg.buttonBox.accepted.connect(self.handle_dialog_vocabulary)
             self.dlg.buttonBox.accepted.connect(self.save_file)
+            self.dlg.buttonBox.rejected.connect(self.close)
             self.dlg.button_load_layer.clicked.connect(self.load_fields)
             self.dlg.actionSave.triggered.connect(self.save_setting)
             self.dlg.actionOpen.triggered.connect(self.open_setting)
@@ -391,7 +392,7 @@ class Layer2Triple:
 
     def load_fields(self):
         
-        #try:
+        try:
             self.layer = QgsProject.instance().mapLayersByName(self.dlg.comboLayer.currentText())[0]
             self.fields_name = []        
 
@@ -408,11 +409,11 @@ class Layer2Triple:
                 "Success", "Load Layer fields",
                 level=Qgis.Success, duration=3
             )
-        #except:
+        except:
             
-         #   self.iface.messageBar().pushMessage(
-         #   "Error", "No layer loading",
-         #   level=Qgis.Success, duration=3)
+            self.iface.messageBar().pushMessage(
+            "Error", "No layer loading",
+            level=Qgis.Info, duration=3)
 
     def update_comboLayer(self):
 
@@ -456,30 +457,85 @@ class Layer2Triple:
 
 
     def save_setting(self):
+        try:
             path =str(QFileDialog.getSaveFileName(caption="Defining output file", filter="JSON settings file(*.json)")[0])
             with open(path, "w") as file:
                 # Grava o dicionário settings no arquivo JSON
+                
                 json.dump(settings, file)
+                self.iface.messageBar().pushMessage(
+                        "Success","saved configuration",
+                        level=Qgis.Success, duration=3
+                    )
+        except:
+            pass
+            
+                
 
     def open_setting(self):
             global namespaces
             global settings
+            try:
+                path =str(QFileDialog.getOpenFileName(caption="Defining input file", filter="JSON settings file(*.json)")[0])
+                if path:
+                    self.iface.messageBar().pushMessage("Loading", level=Qgis.Success)
+                    self.dlg.setVisible(False) 
+                
+                    with open(path, "r") as file:
+                        
+                        content = file.read()
+                        settings = json.loads(content)
+                        # Grava o dicionário settings no arquivo JSON
+                        #self.iface.mainWindow().showMaximized() 
+                        progress = QProgressDialog("loading settings...", "Cancel", 0, 100, self.iface.mainWindow())
+                        progress.setWindowModality(Qt.WindowModal)
+                        progress.setMinimumDuration(0)
+                        progress.setAutoClose(True)
+                        progress.setAutoReset(False)
+                        progress.show()
+                        
+                        for i in range(0, 101, 25):
+                            progress.setValue(i)
 
-            path =str(QFileDialog.getOpenFileName(caption="Defining input file", filter="JSON settings file(*.json)")[0])
-            with open(path, "r") as file:
-                # Grava o dicionário settings no arquivo JSON
-                print ("openning settings")
-                content = file.read()
-                settings = json.loads(content)
-                # eliminar essa gambiarra, considerando que na configuracao so tera a URL
-                settings["NAMESPACES"] = {k: (lambda x: (Namespace(x[0]), x[1]  ))(v) for k, v in  settings["NAMESPACES"].items() } #incluir o namespace
-                print (settings)
-                namespaces = settings["NAMESPACES"]
-                self.load_vocabularies()
-                self.update_vocabularies()
+                            if i == 0:
+                                progress.setLabelText("Carregando configurações...")
+                            elif i == 25:
+                                progress.setLabelText("Configurações carregadas, carregando vocabulários...")
+                            elif i == 50:
+                                progress.setLabelText("Vocabulários carregados, atualizando vocabulários...")
+                            elif i == 75:
+                                progress.setLabelText("Vocabulários atualizados, finalizando...")
+                            
+                            # eliminar essa gambiarra, considerando que na configuracao so tera a URL
+                            settings["NAMESPACES"] = {k: (lambda x: (Namespace(x[0]), x[1]  ))(v) for k, v in  settings["NAMESPACES"].items() } #incluir o namespace
+                            namespaces = settings["NAMESPACES"]
+                            self.load_vocabularies()
+                            self.update_vocabularies()
 
+                        progress.setValue(100)
+                        progress.setLabelText("Carregamento concluído!")
+                            
+                        progress.close()
+                            
+                        self.iface.messageBar().pushMessage(
+                            "Success",
+                        "configuration uploaded successfully...",
+                            level=Qgis.Success, duration=3
+                        )
+                    self.dlg.setVisible(True) 
+            except:
+                self.iface.messageBar().pushMessage(
+                            "Error",
+                        "configuration not uploaded...",
+                            level=Qgis.Warning, duration=3
+                        )
+                progress.close()
+                self.dlg.setVisible(True) 
+                
+                pass
 
     def save_file(self):
+        try:
             path =str(QFileDialog.getSaveFileName(caption="Defining output file", filter="Terse RDF Triple Language(*.ttl)")[0])
             
             mVocab = {}
@@ -514,7 +570,7 @@ class Layer2Triple:
                         line_edit = self.dlg.tableAttributes.cellWidget(row, 2)
                         save_constants[rdf_attr] = parse_ifs(line_edit.text())
                         mVocab[rdf_attr] =  url_rdf         
-
+            
             if self.dlg.checkSelected.isChecked():
                     features = self.layer.selectedFeatures() 
             else:
@@ -630,4 +686,8 @@ class Layer2Triple:
                     "Success", "Output file written at " + path,
                     level=Qgis.Success, duration=3
              )
-             
+        except:
+            pass
+        
+    def close(self):
+        self.dlg.setVisible(False)
