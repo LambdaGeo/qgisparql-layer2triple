@@ -478,7 +478,6 @@ class Layer2Triple:
             try:
                 path =str(QFileDialog.getOpenFileName(caption="Defining input file", filter="JSON settings file(*.json)")[0])
                 if path:
-                    self.iface.messageBar().pushMessage("Loading", level=Qgis.Success)
                     self.dlg.setVisible(False) 
                 
                     with open(path, "r") as file:
