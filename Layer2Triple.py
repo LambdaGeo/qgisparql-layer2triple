@@ -25,7 +25,6 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from PyQt5.QtCore import Qt
 from qgis.PyQt.QtWidgets import QAction, QTableWidgetItem, QTableWidget, QCheckBox, QComboBox, QLineEdit, QFileDialog,QProgressDialog,QGroupBox,QVBoxLayout,QHBoxLayout,QPushButton
-import time
 from qgis.core import QgsProject, Qgis, QgsVectorLayer, QgsRasterLayer,   QgsMultiPolygon
 
 # Initialize Qt resources from file resources.py
@@ -509,7 +508,6 @@ class Layer2Triple:
             pass
             
                 
-
     def open_setting(self):
             global namespaces
             global settings
