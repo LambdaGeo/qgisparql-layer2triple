@@ -382,6 +382,10 @@ class Layer2Triple:
             self.first_start = False
             self.dlg = Layer2TripleMain()
 
+
+            self.vocab_dlg = VocabularyDialog()
+
+
             self.vocab_dlg = VocabularyDialog()
 
             #self.dlg.buttonLoad.clicked.connect(handle_dialog_vocabulary)

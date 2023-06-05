@@ -377,6 +377,31 @@
          </widget>
         </item>
         <item>
+
+         <widget class="QLabel" name="atributos">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Attributes</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QTableWidget" name="tableAttributes">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
+        </item>
+        <item>
+
          <layout class="QHBoxLayout" name="horizontalLayout_5">
           <item>
            <spacer name="horizontalSpacer">
@@ -412,7 +437,11 @@
      <x>0</x>
      <y>0</y>
      <width>792</width>
+
      <height>21</height>
+
+     <height>22</height>
+
     </rect>
    </property>
    <widget class="QMenu" name="menuSettings">
