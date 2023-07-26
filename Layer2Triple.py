@@ -25,7 +25,8 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from PyQt5.QtCore import Qt
 from qgis.PyQt.QtWidgets import QAction, QTableWidgetItem, QTableWidget, QCheckBox, QComboBox, QLineEdit, QFileDialog,QProgressDialog,QGroupBox,QVBoxLayout,QHBoxLayout,QPushButton
-from qgis.core import QgsProject, Qgis, QgsVectorLayer, QgsRasterLayer,   QgsMultiPolygon
+from qgis.core import QgsProject, Qgis, QgsVectorLayer, QgsRasterLayer,   QgsMultiPolygon, QgsTask, QgsTaskManager, QgsApplication, QgsMessageLog
+
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -137,42 +138,9 @@ class Layer2Triple:
         self.concepts = []
         self.fields_name = []
 
-        self.load_vocabularies()
+        self.load_vocabularies(namespaces)
 
         #self.vocab_dialog = 
-
-    def load_vocabularies(self):
-        for key, value in namespaces.items():
-            self.load_vocabulary(key, str(value[0]), value[1])
-
-    def load_vocabulary(self, prefix, namespace, format):
-        g = Graph()
-        g.parse(namespace, format=format)
-        q = """
-            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-            PREFIX owl: <http://www.w3.org/2002/07/owl#>
-
-            SELECT ?p
-            WHERE 
-            {
-                { ?p rdf:type owl:Class} UNION
-               { ?p rdf:type owl:DatatypeProperty} UNION
-               { ?p rdf:type owl:ObjectProperty} UNION
-               { ?p rdf:type rdf:Property}    
-            }
-        """
-
-        # Apply the query to the graph and iterate through results
-        
-        i = len(self.concepts) # o inicial para adicionar no table attributues
-
-        for r in g.query(q):
-            attr = r["p"].split("#") 
-            name = prefix+":"+attr[1]
-            self.concepts.append(name)
-        
-        if prefix not in namespaces:
-            namespaces[prefix] = (Namespace(namespace), format)
 
     def filter_table(self):
         text = self.search_bar.text().lower()
@@ -182,59 +150,6 @@ class Layer2Triple:
                 self.dlg.tableAttributes.setRowHidden(row, False)
             else:
                 self.dlg.tableAttributes.setRowHidden(row, True)
-
-
-    def fill_table(self, start):
-        # Cria o grupo que conterá o campo de filtragem e a tabela de atributos
-        self.attribute_group_box = QGroupBox("Attributes", self.dlg)
-        self.dlg.gridLayout.addWidget(self.attribute_group_box, 1, 0, 1, 1)
-
-        # Adiciona o campo de filtragem ao grupo de atributos
-        self.search_bar = QLineEdit(self.attribute_group_box)
-        self.search_bar.setPlaceholderText("Filtrar concepts...")
-        vbox = QVBoxLayout()
-        vbox.addWidget(self.search_bar)
-
-        # Adiciona a tabela de atributos ao grupo de atributos
-        self.dlg.tableAttributes = QTableWidget(self.attribute_group_box)
-        vbox.addWidget(self.dlg.tableAttributes)
-
-        # Define o layout vertical para o grupo de atributos
-        self.attribute_group_box.setLayout(vbox)
-
-        # Configura a tabela de atributos
-        self.dlg.tableAttributes.setRowCount(len(self.concepts))
-        self.dlg.tableAttributes.setColumnCount(3)
-        self.dlg.tableAttributes.setHorizontalHeaderLabels(["Concepts", "Type", "Value"])
-
-        for c in self.concepts[start:]:
-            self.dlg.tableAttributes.setCellWidget(start, 0, QCheckBox(c))
-            comboBox = QComboBox()
-            comboBox.textActivated.connect(partial(self.combo_changed, start))
-            comboBox.addItem("Constant Value")
-            comboBox.addItem("Layer Attribute")
-            comboBox.addItem("Vocabulary")
-            self.dlg.tableAttributes.setCellWidget(start, 1, comboBox)
-            self.dlg.tableAttributes.setCellWidget(start, 2, QLineEdit())
-            start += 1
-
-        self.search_bar.textChanged.connect(self.filter_table)
-
-        for c in self.concepts:
-            self.dlg.comboRDFType.addItem(c)
-            self.dlg.comboRDFType_2.addItem(c)
-            self.dlg.comboBoxPredicate.addItem(c)
-        self.button_group_box = QGroupBox(self.dlg)
-        self.dlg.gridLayout.addWidget(self.button_group_box, 3, 0, 1, 1)
-
-        # Adiciona os botões ao grupo de botões
-        hbox = QHBoxLayout()
-        hbox.addStretch(1)
-        hbox.addWidget(self.dlg.buttonBox)
-
-        # Define o layout horizontal para o grupo de botões
-        self.button_group_box.setLayout(hbox)
-        self.filter_table()
 
 
 
@@ -419,14 +334,6 @@ class Layer2Triple:
     def show_dialog_vocabulary(self):
         self.vocab_dlg.show()
 
-    def handle_dialog_vocabulary(self):
-        format = self.vocab_dlg.comboFormat.currentText()
-        namespace = self.vocab_dlg.lineURL.text()
-        prefix = self.vocab_dlg.linePrefix.text()
-        start = len (self.concepts)
-        print (prefix, namespace, format)
-        self.load_vocabulary(prefix, namespace, format)
-        self.fill_table(start)
 
     def load_fields(self):
         
@@ -506,69 +413,156 @@ class Layer2Triple:
                     )
         except:
             pass
+        
+    def handle_dialog_vocabulary(self):
+        format = self.vocab_dlg.comboFormat.currentText()
+        namespace = self.vocab_dlg.lineURL.text()
+        prefix = self.vocab_dlg.linePrefix.text()
+        start = len (self.concepts)
+        dict={
+            prefix:(namespace,format)}         
+        print (prefix, namespace, format)
+        self.load_vocabularies(dict)
+                    
+    def load_vocabularies(self,namespaces):
             
+        self.batch_tasks = []
+        try:
+            for key,value in namespaces.items():
+                #task                                     #, wait_time=2                    #,total=total_size, callback=progress_callback
+                self.task = QgsTask.fromFunction('Loading settings...',self.load_vocabulary,key,str(value[0]),value[1],on_finished=partial(self.fill_table)) #format
+                self.task.taskCompleted.connect(self.check_if_loading_config)
+                QgsApplication.taskManager().addTask(self.task)
                 
+            self.execute_batch_tasks()
+            self.iface.messageBar().pushMessage(
+                "Success",
+            "configuration uploaded successfully...",
+                level=Qgis.Success, duration=3
+            )
+        except:
+            pass
+            
+    def load_vocabulary(self,task, prefix, namespace, format):
+        
+        g = Graph()
+        g.parse(namespace, format=format)
+        q = """
+            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            PREFIX owl: <http://www.w3.org/2002/07/owl#>
+
+            SELECT ?p
+            WHERE 
+            {
+                { ?p rdf:type owl:Class} UNION
+               { ?p rdf:type owl:DatatypeProperty} UNION
+               { ?p rdf:type owl:ObjectProperty} UNION
+               { ?p rdf:type rdf:Property}    
+            }
+        """
+
+        # Apply the query to the graph and iterate through results
+        
+
+        for r in g.query(q):
+            attr = r["p"].split("#") 
+            name = prefix+":"+attr[1]
+            self.concepts.append(name)
+        
+        if prefix not in namespaces:
+            namespaces[prefix] = (Namespace(namespace), format)
+
+        i = len(self.concepts) # o inicial para adicionar no table attributues
+        return i
+
+    def fill_table(self, start):
+        # Cria o grupo que conterá o campo de filtragem e a tabela de atributos
+        self.attribute_group_box = QGroupBox("Attributes", self.dlg)
+        self.dlg.gridLayout.addWidget(self.attribute_group_box, 1, 0, 1, 1)
+
+        # Adiciona o campo de filtragem ao grupo de atributos
+        self.search_bar = QLineEdit(self.attribute_group_box)
+        self.search_bar.setPlaceholderText("Filtrar concepts...")
+        vbox = QVBoxLayout()
+        vbox.addWidget(self.search_bar)
+
+        # Adiciona a tabela de atributos ao grupo de atributos
+        self.dlg.tableAttributes = QTableWidget(self.attribute_group_box)
+        vbox.addWidget(self.dlg.tableAttributes)
+
+        # Define o layout vertical para o grupo de atributos
+        self.attribute_group_box.setLayout(vbox)
+
+        # Configura a tabela de atributos
+        self.dlg.tableAttributes.setRowCount(len(self.concepts))
+        self.dlg.tableAttributes.setColumnCount(3)
+        self.dlg.tableAttributes.setHorizontalHeaderLabels(["Concepts", "Type", "Value"])
+
+        for c in self.concepts[start:]:
+            self.dlg.tableAttributes.setCellWidget(start, 0, QCheckBox(c))
+            comboBox = QComboBox()
+            comboBox.textActivated.connect(partial(self.combo_changed, start))
+            comboBox.addItem("Constant Value")
+            comboBox.addItem("Layer Attribute")
+            comboBox.addItem("Vocabulary")
+            self.dlg.tableAttributes.setCellWidget(start, 1, comboBox)
+            self.dlg.tableAttributes.setCellWidget(start, 2, QLineEdit())
+            start += 1
+
+        self.search_bar.textChanged.connect(self.filter_table)
+
+        for c in self.concepts:
+            self.dlg.comboRDFType.addItem(c)
+            self.dlg.comboRDFType_2.addItem(c)
+            self.dlg.comboBoxPredicate.addItem(c)
+        self.button_group_box = QGroupBox(self.dlg)
+        self.dlg.gridLayout.addWidget(self.button_group_box, 3, 0, 1, 1)
+
+        # Adiciona os botões ao grupo de botões
+        hbox = QHBoxLayout()
+        hbox.addStretch(1)
+        hbox.addWidget(self.dlg.buttonBox)
+
+        # Define o layout horizontal para o grupo de botões
+        self.button_group_box.setLayout(hbox)
+        self.filter_table()
+
+               
+           
+    def execute_batch_tasks(self):
+        if self.batch_tasks:
+            task = self.batch_tasks.pop(0)
+            QgsApplication.taskManager().addTask(task)
+ 
+      #isso aqui serve   
+    def check_if_loading_config(self):  
+        
+        self.update_vocabularies()
+            ##gambiarra
+        self.iface.messageBar().pushMessage(
+        "Success",
+        f"Finished loading 100% files.",
+        level=Qgis.Success,
+        )
+        
     def open_setting(self):
-            global namespaces
-            global settings
-            try:
-                path =str(QFileDialog.getOpenFileName(caption="Defining input file", filter="JSON settings file(*.json)")[0])
-                if path:
-                    self.dlg.setVisible(False) 
+        global namespaces
+        global settings
+        
+        path =str(QFileDialog.getOpenFileName(caption="Defining input file", filter="JSON settings file(*.json)")[0])
+        if path:
+            with open(path, "r") as file:
                 
-                    with open(path, "r") as file:
-                        
-                        content = file.read()
-                        settings = json.loads(content)
-                        # Grava o dicionário settings no arquivo JSON
-                        #self.iface.mainWindow().showMaximized() 
-                        progress = QProgressDialog("loading settings...", "Cancel", 0, 100, self.iface.mainWindow())
-                        progress.setWindowModality(Qt.WindowModal)
-                        progress.setMinimumDuration(0)
-                        progress.setAutoClose(True)
-                        progress.setAutoReset(False)
-                        progress.show()
-                        
-                        for i in range(0, 101, 25):
-                            progress.setValue(i)
-
-                            if i == 0:
-                                progress.setLabelText("Carregando configurações...")
-                            elif i == 25:
-                                progress.setLabelText("Configurações carregadas, carregando vocabulários...")
-                            elif i == 50:
-                                progress.setLabelText("Vocabulários carregados, atualizando vocabulários...")
-                            elif i == 75:
-                                progress.setLabelText("Vocabulários atualizados, finalizando...")
-                            
-                        # eliminar essa gambiarra, considerando que na configuracao so tera a URL
-                        settings["NAMESPACES"] = {k: (lambda x: (Namespace(x[0]), x[1]  ))(v) for k, v in  settings["NAMESPACES"].items() } #incluir o namespace
-                        namespaces = settings["NAMESPACES"]
-                        self.load_vocabularies()
-                        self.update_vocabularies()
-
-                        progress.setValue(100)
-                        progress.setLabelText("Carregamento concluído!")
-                            
-                        progress.close()
-                            
-                        self.iface.messageBar().pushMessage(
-                            "Success",
-                        "configuration uploaded successfully...",
-                            level=Qgis.Success, duration=3
-                        )
-                    self.dlg.setVisible(True) 
-            except:
-                self.iface.messageBar().pushMessage(
-                            "Error",
-                        "configuration not uploaded...",
-                            level=Qgis.Warning, duration=3
-                        )
-                progress.close()
-                self.dlg.setVisible(True) 
+                content = file.read()
+                settings = json.loads(content)
+                # Grava o dicionário settings no arquivo JSON
+                #self.iface.mainWindow().showMaximized() 
+            
+                # eliminar essa gambiarra, considerando que na configuracao so tera a URL
+                settings["NAMESPACES"] = {k: (lambda x: (Namespace(x[0]), x[1]  ))(v) for k, v in  settings["NAMESPACES"].items() } #incluir o namespace
+                namespaces = settings["NAMESPACES"]
+                self.load_vocabularies(namespaces)
                 
-                pass
-
     def save_file(self):
         try:
             path =str(QFileDialog.getSaveFileName(caption="Defining output file", filter="Terse RDF Triple Language(*.ttl)")[0])
