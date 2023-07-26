@@ -401,6 +401,8 @@ class Layer2Triple:
         return namespace[rdf_attr]
 
 
+
+    #obervar 
     def save_setting(self):
         try:
             path =str(QFileDialog.getSaveFileName(caption="Defining output file", filter="JSON settings file(*.json)")[0])
@@ -428,6 +430,7 @@ class Layer2Triple:
             
         self.batch_tasks = []
         try:
+            #for 
             for key,value in namespaces.items():
                 #task                                     #, wait_time=2                    #,total=total_size, callback=progress_callback
                 self.task = QgsTask.fromFunction('Loading settings...',self.load_vocabulary,key,str(value[0]),value[1],on_finished=partial(self.fill_table)) #format
@@ -444,7 +447,8 @@ class Layer2Triple:
             pass
             
     def load_vocabulary(self,task, prefix, namespace, format):
-        
+        print(f'concepts:{self.concepts}')
+        print(f'concepts:{len(self.concepts)}')
         g = Graph()
         g.parse(namespace, format=format)
         q = """
@@ -473,6 +477,7 @@ class Layer2Triple:
             namespaces[prefix] = (Namespace(namespace), format)
 
         i = len(self.concepts) # o inicial para adicionar no table attributues
+        print(f'tamaho de concepts:{i}')
         return i
 
     def fill_table(self, start):
@@ -564,8 +569,8 @@ class Layer2Triple:
                 self.load_vocabularies(namespaces)
                 
     def save_file(self):
-        try:
-            path =str(QFileDialog.getSaveFileName(caption="Defining output file", filter="Terse RDF Triple Language(*.ttl)")[0])
+        try:                                                                             #para deixar isso mais generico usar ttl e xml futuramente
+            path =str(QFileDialog.getSaveFileName(caption="Defining output file", filter="Terse RDF Triple Language(*.ttl);;XML Files (*.xml)")[0])
             
             mVocab = {}
             saveAttrs = {}
