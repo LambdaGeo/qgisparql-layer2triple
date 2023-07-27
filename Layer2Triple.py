@@ -23,10 +23,10 @@
 """
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
-from PyQt5.QtCore import Qt
-from qgis.PyQt.QtWidgets import QAction, QTableWidgetItem, QTableWidget, QCheckBox, QComboBox, QLineEdit, QFileDialog,QProgressDialog,QGroupBox,QVBoxLayout,QHBoxLayout,QPushButton
-from qgis.core import QgsProject, Qgis, QgsVectorLayer, QgsRasterLayer,   QgsMultiPolygon, QgsTask, QgsTaskManager, QgsApplication, QgsMessageLog
-
+from PyQt5.QtCore import Qt,QTimer
+from qgis.PyQt.QtWidgets import QAction, QTableWidgetItem, QTableWidget, QCheckBox, QComboBox, QLineEdit, QFileDialog,QProgressDialog,QGroupBox,QVBoxLayout,QHBoxLayout,QPushButton,QProgressBar,QMessageBox
+from qgis.core import QgsProject, Qgis, QgsVectorLayer, QgsRasterLayer,   QgsMultiPolygon, QgsTask, QgsTaskManager, QgsMessageLog, QgsApplication
+from qgis.gui import QgsMessageBar
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -267,7 +267,7 @@ class Layer2Triple:
 
     def update_vocabularies(self):    
         print (self.concepts)    
-        self.fill_table(0)
+        self.fill_table(None,0)
         if ("TRIPLEPREFIX" in settings):
             self.dlg.lineURLBase.setText(settings["TRIPLEURL"])
             self.dlg.linePrefix2.setText(settings["TRIPLEPREFIX"])
@@ -346,7 +346,7 @@ class Layer2Triple:
             for field in fields:
                 self.fields_name.append(field.name())
 
-            self.fill_table(0)
+            self.fill_table(None,0)
 
             for attr in self.fields_name:
                 self.dlg.comboAttributeID.addItem(attr)
@@ -436,6 +436,15 @@ class Layer2Triple:
         try:
             g = Graph()
             g.parse(namespace, format=format)
+            total_items = len(g)
+            
+            #progress_dialog = QProgressDialog("Loading settings...", "Cancel", 0, total_items)
+    #        progress_dialog.setWindowTitle("Progress")
+     #       progress_dialog.setModal(True)
+      #      progress_dialog.setAutoReset(False)
+       #     progress_dialog.setAutoClose(True)
+        #    progress_dialog.show()
+            
             q = """
                 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
                 PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -451,12 +460,14 @@ class Layer2Triple:
             """
 
             # Apply the query to the graph and iterate through results
-            
-
             for r in g.query(q):
                 attr = r["p"].split("#") 
                 name = prefix+":"+attr[1]
                 self.concepts.append(name)
+         #       count += 1
+        #        progress_dialog.setValue(count)
+                #progress_percent = int((count / total_items) * 100)
+                #task.setProgress(progress_percent)
             
             if prefix not in namespaces:
                 namespaces[prefix] = (Namespace(namespace), format)
@@ -465,16 +476,21 @@ class Layer2Triple:
                 
             i = len(self.concepts) # o inicial para adicionar no table attributues
             print(f'tamaho de concepts:{i}')
+            #task.taskCompleted.emit(task)
+            task.setProgress(100)
             return i
         except:
             QgsMessageLog.logMessage('Fail to load vocabulary', 'Layer2Triple')
             self.errorMessage = 'Fail to load vocabulary: check file settings'
+            #task.taskCompleted.emit(task)
+            task.setProgress(1)
 
-    def fill_table(self, start):
+    def fill_table(self,time, start):
         try:
             
             QgsMessageLog.logMessage('Loading table.', 'Layer2Triple')
             # Cria o grupo que conterá o campo de filtragem e a tabela de atributos
+            ##mexer aqui é sensivel pois altera o layout do plugin 
             self.attribute_group_box = QGroupBox("Attributes", self.dlg)
             self.dlg.gridLayout.addWidget(self.attribute_group_box, 1, 0, 1, 1)
 
@@ -495,7 +511,19 @@ class Layer2Triple:
             self.dlg.tableAttributes.setRowCount(len(self.concepts))
             self.dlg.tableAttributes.setColumnCount(3)
             self.dlg.tableAttributes.setHorizontalHeaderLabels(["Concepts", "Type", "Value"])
-
+            
+            #barra de progresso na propria interface
+#            self.progress_bar = QProgressBar(self.dlg)
+ #           self.dlg.gridLayout.addWidget(self.progress_bar, 2, 0, 1, 1)
+  #          self.progress_bar.setFixedWidth(200)  # Adjust the width as needed
+   #         self.progress_bar.setAlignment(Qt.AlignCenter)  # Center the progress bar text
+    #        self.progress_bar.setStyleSheet(
+     #           "QProgressBar::chunk { background-color: #3498db; }"  # Blue color for the progress bar
+      #      )
+       #     total_concepts = len(self.concepts)
+        #    progress_step = 100 / total_concepts
+        #    current_progress = 0
+            
             for c in self.concepts[start:]:
                 self.dlg.tableAttributes.setCellWidget(start, 0, QCheckBox(c))
                 comboBox = QComboBox()
@@ -506,6 +534,10 @@ class Layer2Triple:
                 self.dlg.tableAttributes.setCellWidget(start, 1, comboBox)
                 self.dlg.tableAttributes.setCellWidget(start, 2, QLineEdit())
                 start += 1
+            
+                #barra de progresso na propria interface
+         #       current_progress += progress_step
+          #      self.progress_bar.setValue(int(current_progress))   
 
             self.search_bar.textChanged.connect(self.filter_table)
 
@@ -523,14 +555,26 @@ class Layer2Triple:
 
             # Define o layout horizontal para o grupo de botões
             self.button_group_box.setLayout(hbox)
-            self.filter_table()    
+            self.filter_table()
+            if time !=None:
+                self.show_progress_bar(time)   
             return True
         except:
             QgsMessageLog.logMessage('Fail to load vocabulary', 'Layer2Triple')
             self.errorMessage = 'Fail to load vocabulary: check file settings'
             return False
-            
-      #isso aqui serve   
+    
+    def show_progress_bar(self,time):
+             
+        progress_window = QMessageBox(self.dlg)
+        progress_window.setWindowTitle("Progress")
+        progress_bar = QProgressBar(progress_window)
+        progress_window.layout().addWidget(progress_bar)
+        progress_window.show()
+        timer = QTimer(progress_window)
+        timer.timeout.connect(progress_window.close)
+        timer.start(2000)      
+        progress_bar.setValue(time)
         
     def open_setting(self):
         global namespaces
@@ -542,6 +586,7 @@ class Layer2Triple:
                 with open(path, "r") as file:
                     
                     content = file.read()
+                    total_size = len(content)
                     settings = json.loads(content)
                     # Grava o dicionário settings no arquivo JSON
                     #self.iface.mainWindow().showMaximized() 
@@ -549,30 +594,25 @@ class Layer2Triple:
                     # eliminar essa gambiarra, considerando que na configuracao so tera a URL
                     settings["NAMESPACES"] = {k: (lambda x: (Namespace(x[0]), x[1]  ))(v) for k, v in  settings["NAMESPACES"].items() } #incluir o namespace
                     namespaces = settings["NAMESPACES"]
-                
+                    
+                    #barra de progresso em relação ao "foR" nao deixa a task executar 
+                    total_items = len(namespaces)
+                    progress_step = 100 / total_items
+                    current_progress = 0                    
                 #iterator = iter(namespaces.items())
                 for key, value in namespaces.items():
-                    #print(f"Key: {key}")
-                    #for item in value:
-                        #print(f"Value: {item}")
-                
-                #while True:
-                 #   try:
-                  #      key, value = next(iterator)
-                   #     print(f"Key: {key}, Value: {value}")
-                    #except StopIteration:
-                     #   break
-        # Here, 'idx' will represent the current index, and 'key' and 'value' will be the current key-value pair
-                        QgsMessageLog.logMessage('criando tarefa.', 'Layer2Triple')
-                        self.task = QgsTask.fromFunction('Loading settings...', self.load_vocabulary, key, str(value[0]), value[1], on_finished=partial(self.fill_table))  # format
-                        self.task.taskCompleted.connect(self.check_if_loading_config)
-                        QgsApplication.taskManager().addTask(self.task)
-                        #verificar se essa mensagemm chega atrasada ou nao 
-                        self.iface.messageBar().pushMessage(
-                            "Success",
-                        "configuration uploaded successfully...",
-                            level=Qgis.Success, duration=3
-                        )
+                      
+                # Here, 'idx' will represent the current index, and 'key' and 'value' will be the current key-value pair
+                    QgsMessageLog.logMessage('criando tarefa.', 'Layer2Triple')                                                     #,total=total_size, callback=progress_callback
+                    self.task = QgsTask.fromFunction('Loading settings...', self.load_vocabulary, key, str(value[0]), value[1], on_finished=partial(self.fill_table))  # format
+                    self.task.taskCompleted.connect(self.check_if_loading_config)
+                    QgsApplication.taskManager().addTask(self.task)
+                    #verificar se essa mensagemm chega atrasada ou nao 
+                    self.iface.messageBar().pushMessage(
+                        "Success",
+                    "configuration uploaded successfully...",
+                        level=Qgis.Success, duration=3
+                    )
         except:
             QgsMessageLog.logMessage('Fail, could not open the file', 'Layer2Triple')
             self.errorMessage = 'Fail, could not open the file: check file settings'
@@ -584,14 +624,21 @@ class Layer2Triple:
         #"Error",
         #f"setting files not loaded ",
         #level=Qgis.Critical,
-
-        self.update_vocabularies()
             ##gambiarra
-        self.iface.messageBar().pushMessage(
-        "Success",
-        f"Finished loading 100% files.",
-        level=Qgis.Success,
+        #if task.progress()==100:
+            self.iface.messageBar().pushMessage(
+            "Success",
+            "Configuration uploaded successfully...",
+            level=Qgis.Success,
+            duration=3
         )
+        #else:
+         #   self.iface.messageBar().pushMessage(
+        #"Error",
+        #f"Failed to load settings...",
+        #level=Qgis.Warning,
+        #)
+            self.update_vocabularies()
         
     def save_file(self):
         try:                                                                             #para deixar isso mais generico usar ttl e xml futuramente
@@ -656,7 +703,6 @@ class Layer2Triple:
                         triples[attr] = triple
                     else:
                         triples[str(uuid.uuid4())] = triple
-
 
 
             g = Graph()
