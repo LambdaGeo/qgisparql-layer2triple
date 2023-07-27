@@ -137,7 +137,6 @@ class Layer2Triple:
 
         self.concepts = []
         self.fields_name = []
-
         #self.vocab_dialog = 
 
 
@@ -428,6 +427,22 @@ class Layer2Triple:
         self.task.taskCompleted.connect(self.check_if_loading_config)
         QgsApplication.taskManager().addTask(self.task)
 
+    #possivelmente utilizar essa função para barra de progresso
+    def show_progress_bar(self,time,start):             
+        total_items = len(namespaces)
+        progress_dialog = QProgressDialog("Loading settings...", "Cancel", 0, start)
+        progress_dialog.setWindowTitle("Progress")
+        progress_dialog.setLabelText("Importing features...")
+        progress_dialog.setMaximum(total_items)
+        progress_dialog.setValue(0)
+        progress_dialog.show()
+        progress_dialog.setCancelButton(None)
+        progress_dialog.setValue(time)
+        progress_dialog.setLabelText(
+    "Importing feature {} of {}".format(time, start))
+        progress_dialog.close()
+    #chama self.show_progress_bar(self.task,self.concepts)
+      
                      
     def load_vocabulary(self,task, prefix, namespace, format):
         print(f'concepts:{self.concepts}')
@@ -437,13 +452,7 @@ class Layer2Triple:
             g = Graph()
             g.parse(namespace, format=format)
             total_items = len(g)
-            
-            #progress_dialog = QProgressDialog("Loading settings...", "Cancel", 0, total_items)
-    #        progress_dialog.setWindowTitle("Progress")
-     #       progress_dialog.setModal(True)
-      #      progress_dialog.setAutoReset(False)
-       #     progress_dialog.setAutoClose(True)
-        #    progress_dialog.show()
+
             
             q = """
                 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -464,26 +473,20 @@ class Layer2Triple:
                 attr = r["p"].split("#") 
                 name = prefix+":"+attr[1]
                 self.concepts.append(name)
-         #       count += 1
-        #        progress_dialog.setValue(count)
-                #progress_percent = int((count / total_items) * 100)
-                #task.setProgress(progress_percent)
             
             if prefix not in namespaces:
                 namespaces[prefix] = (Namespace(namespace), format)
 
             QgsMessageLog.logMessage('carregado os dados do dataworld.', 'Layer2Triple')
                 
-            i = len(self.concepts) # o inicial para adicionar no table attributues
-            print(f'tamaho de concepts:{i}')
-            #task.taskCompleted.emit(task)
-            task.setProgress(100)
-            return i
-        except:
+            #print(f'tamaho de concepts:{len(self.concepts)}')
+            self.err=False
+            return len(self.concepts)
+        except Exception as e:
             QgsMessageLog.logMessage('Fail to load vocabulary', 'Layer2Triple')
-            self.errorMessage = 'Fail to load vocabulary: check file settings'
-            #task.taskCompleted.emit(task)
-            task.setProgress(1)
+            self.errorMessage = f'Failed to load vocabulary: no load_vocabulary {str(e)} check file settings'
+            self.err=True
+            return False
 
     def fill_table(self,time, start):
         try:
@@ -556,25 +559,13 @@ class Layer2Triple:
             # Define o layout horizontal para o grupo de botões
             self.button_group_box.setLayout(hbox)
             self.filter_table()
-            if time !=None:
-                self.show_progress_bar(time)   
+            self.err=False
             return True
-        except:
+        except Exception as e:
             QgsMessageLog.logMessage('Fail to load vocabulary', 'Layer2Triple')
-            self.errorMessage = 'Fail to load vocabulary: check file settings'
+            self.errorMessage = f'Failed to load vocabulary: no fill table {str(e)} check file settings'
             return False
-    
-    def show_progress_bar(self,time):
-             
-        progress_window = QMessageBox(self.dlg)
-        progress_window.setWindowTitle("Progress")
-        progress_bar = QProgressBar(progress_window)
-        progress_window.layout().addWidget(progress_bar)
-        progress_window.show()
-        timer = QTimer(progress_window)
-        timer.timeout.connect(progress_window.close)
-        timer.start(2000)      
-        progress_bar.setValue(time)
+        
         
     def open_setting(self):
         global namespaces
@@ -595,11 +586,6 @@ class Layer2Triple:
                     settings["NAMESPACES"] = {k: (lambda x: (Namespace(x[0]), x[1]  ))(v) for k, v in  settings["NAMESPACES"].items() } #incluir o namespace
                     namespaces = settings["NAMESPACES"]
                     
-                    #barra de progresso em relação ao "foR" nao deixa a task executar 
-                    total_items = len(namespaces)
-                    progress_step = 100 / total_items
-                    current_progress = 0                    
-                #iterator = iter(namespaces.items())
                 for key, value in namespaces.items():
                       
                 # Here, 'idx' will represent the current index, and 'key' and 'value' will be the current key-value pair
@@ -607,38 +593,27 @@ class Layer2Triple:
                     self.task = QgsTask.fromFunction('Loading settings...', self.load_vocabulary, key, str(value[0]), value[1], on_finished=partial(self.fill_table))  # format
                     self.task.taskCompleted.connect(self.check_if_loading_config)
                     QgsApplication.taskManager().addTask(self.task)
-                    #verificar se essa mensagemm chega atrasada ou nao 
-                    self.iface.messageBar().pushMessage(
-                        "Success",
-                    "configuration uploaded successfully...",
-                        level=Qgis.Success, duration=3
-                    )
+
         except:
             QgsMessageLog.logMessage('Fail, could not open the file', 'Layer2Triple')
             self.errorMessage = 'Fail, could not open the file: check file settings'
                 
     def check_if_loading_config(self):  
         #aqui falta a questao do retorno de erro ou sucesso que pode ser um parametro
-        #if erro:
-        #self.iface.messageBar().pushMessage(
-        #"Error",
-        #f"setting files not loaded ",
-        #level=Qgis.Critical,
-            ##gambiarra
-        #if task.progress()==100:
+        if self.err == True:   
+            self.iface.messageBar().pushMessage(
+                "Error",
+                self.errorMessage,
+                level=Qgis.Warning,duration=3)
+        
+        else:
             self.iface.messageBar().pushMessage(
             "Success",
             "Configuration uploaded successfully...",
             level=Qgis.Success,
             duration=3
         )
-        #else:
-         #   self.iface.messageBar().pushMessage(
-        #"Error",
-        #f"Failed to load settings...",
-        #level=Qgis.Warning,
-        #)
-            self.update_vocabularies()
+        self.update_vocabularies()  
         
     def save_file(self):
         try:                                                                             #para deixar isso mais generico usar ttl e xml futuramente
