@@ -422,6 +422,7 @@ class Layer2Triple:
         format = self.vocab_dlg.comboFormat.currentText()
         namespace = self.vocab_dlg.lineURL.text()
         prefix = self.vocab_dlg.linePrefix.text()
+        
         QgsMessageLog.logMessage('criando tarefa.', 'Layer2Triple')
         self.task = QgsTask.fromFunction('Loading settings...', self.load_vocabulary, prefix, namespace, format, on_finished=partial(self.fill_table))  # format
         self.task.taskCompleted.connect(self.check_if_loading_config)
@@ -445,14 +446,12 @@ class Layer2Triple:
       
                      
     def load_vocabulary(self,task, prefix, namespace, format):
-        print(f'concepts:{self.concepts}')
-        print(f'concepts:{len(self.concepts)}')
+        
         QgsMessageLog.logMessage('the task is already running.', 'Layer2Triple')
         try:
             g = Graph()
+            #verificar questao do PostParse 2, possivel mudança do metodo interno da rdflib
             g.parse(namespace, format=format)
-            total_items = len(g)
-
             
             q = """
                 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -470,6 +469,7 @@ class Layer2Triple:
 
             # Apply the query to the graph and iterate through results
             for r in g.query(q):
+                
                 attr = r["p"].split("#") 
                 name = prefix+":"+attr[1]
                 self.concepts.append(name)
@@ -483,10 +483,10 @@ class Layer2Triple:
             self.err=False
             return len(self.concepts)
         except Exception as e:
+            print(f'ERRO do Load_vocabulary {str(e)}')
             QgsMessageLog.logMessage('Fail to load vocabulary', 'Layer2Triple')
             self.errorMessage = f'Failed to load vocabulary: no load_vocabulary {str(e)} check file settings'
             self.err=True
-            return False
 
     def fill_table(self,time, start):
         try:
@@ -559,12 +559,12 @@ class Layer2Triple:
             # Define o layout horizontal para o grupo de botões
             self.button_group_box.setLayout(hbox)
             self.filter_table()
-            self.err=False
-            return True
+
         except Exception as e:
+            print(f'ERRO do fill table {str(e)}')
             QgsMessageLog.logMessage('Fail to load vocabulary', 'Layer2Triple')
-            self.errorMessage = f'Failed to load vocabulary: no fill table {str(e)} check file settings'
-            return False
+            self.errorMessage = f'Failed to fill table: no fill table {str(e)} check file settings'
+            self.err=True
         
         
     def open_setting(self):
@@ -577,7 +577,7 @@ class Layer2Triple:
                 with open(path, "r") as file:
                     
                     content = file.read()
-                    total_size = len(content)
+                    #total_size = len(content)
                     settings = json.loads(content)
                     # Grava o dicionário settings no arquivo JSON
                     #self.iface.mainWindow().showMaximized() 
@@ -600,12 +600,13 @@ class Layer2Triple:
                 
     def check_if_loading_config(self):  
         #aqui falta a questao do retorno de erro ou sucesso que pode ser um parametro
+        #gambiarra, mas funciona retornando o erro
         if self.err == True:   
             self.iface.messageBar().pushMessage(
                 "Error",
                 self.errorMessage,
                 level=Qgis.Warning,duration=3)
-        
+        #Receber retorno da task para saber se concluiu sem erros
         else:
             self.iface.messageBar().pushMessage(
             "Success",
@@ -615,159 +616,181 @@ class Layer2Triple:
         )
         self.update_vocabularies()  
         
-    def save_file(self):
-        try:                                                                             #para deixar isso mais generico usar ttl e xml futuramente
-            path =str(QFileDialog.getSaveFileName(caption="Defining output file", filter="Terse RDF Triple Language(*.ttl);;XML Files (*.xml)")[0])
-            
-            mVocab = {}
-            saveAttrs = {}
-            save_constants = {}
-            save_vocabs = {}
-            
-            for row in range(self.dlg.tableAttributes.rowCount()): 
-                check = self.dlg.tableAttributes.cellWidget(row, 0) 
-                if check.isChecked():
-                    rdf_attr = check.text()
-                    rdf = rdf_attr.split(":")
-                    rdf_attr = rdf[1]
-                    namespace = namespaces[rdf[0]][0]
-                    url_rdf = namespace[rdf_attr]
+        
+ # a ideia poderia ser seccionar essa fução pois há um processo mt grande de dados
+ # iteração de features
+ # operações graph que demandam request atraves da rdflib     
+      
 
-                    combo_type = self.dlg.tableAttributes.cellWidget(row, 1)
+    # dicts atributos e vocabulários selecionados
+    def read_selected_attributes(self):
+        mVocab = {}
+        saveAttrs = {}
+        save_constants = {}
 
-                    if (combo_type.currentText() == "Layer Attribute"):
-                        combo = self.dlg.tableAttributes.cellWidget(row, 2)
-                        attribute = combo.currentText()
-                        saveAttrs[attribute] = rdf_attr
-                        #print ("url_rdf",url_rdf, type(url_rdf))
-                        mVocab[attribute] =  url_rdf
-                    elif (combo_type.currentText() == "Vocabulary"):
-                        combo = self.dlg.tableAttributes.cellWidget(row, 2)
-                        attribute = combo.currentText()
-                        url_v = self.toURL(attribute)
-                        save_constants[rdf_attr] = url_v
-                        mVocab[rdf_attr] =  url_rdf   
-                    else:
-                        line_edit = self.dlg.tableAttributes.cellWidget(row, 2)
-                        save_constants[rdf_attr] = parse_ifs(line_edit.text())
-                        mVocab[rdf_attr] =  url_rdf         
-            
-            if self.dlg.checkSelected.isChecked():
-                    features = self.layer.selectedFeatures() 
+        for row in range(self.dlg.tableAttributes.rowCount()): 
+            check = self.dlg.tableAttributes.cellWidget(row, 0) 
+            if check.isChecked():
+                rdf_attr = check.text()
+                rdf = rdf_attr.split(":")
+                rdf_attr = rdf[1]
+                namespace = namespaces[rdf[0]][0]
+                url_rdf = namespace[rdf_attr]
+
+                combo_type = self.dlg.tableAttributes.cellWidget(row, 1)
+
+                if combo_type.currentText() == "Layer Attribute":
+                    combo = self.dlg.tableAttributes.cellWidget(row, 2)
+                    attribute = combo.currentText()
+                    saveAttrs[attribute] = rdf_attr
+                    mVocab[attribute] =  url_rdf
+                elif combo_type.currentText() == "Vocabulary":
+                    combo = self.dlg.tableAttributes.cellWidget(row, 2)
+                    attribute = combo.currentText()
+                    url_v = self.toURL(attribute)
+                    save_constants[rdf_attr] = url_v
+                    mVocab[rdf_attr] =  url_rdf
+                else:
+                    line_edit = self.dlg.tableAttributes.cellWidget(row, 2)
+                    save_constants[rdf_attr] = parse_ifs(line_edit.text())
+                    mVocab[rdf_attr] =  url_rdf
+
+        return mVocab, saveAttrs, save_constants
+        
+
+    # features da Camada
+    def get_layer_features(self):
+        if self.dlg.checkSelected.isChecked():
+            features = self.layer.selectedFeatures() 
+        else:
+            features = self.layer.getFeatures()
+
+        return features
+
+    # criação das triplas RDF
+    def create_rdf_triples(self, features, saveAttrs,mVocab):
+        triples = {}
+        for feature in features:
+            triple = {}
+            mVocab['asWkt'] = URIRef("http://www.opengis.net/ont/geosparql#asWKT")
+            if self.dlg.checkGeometries.isChecked():
+                pol = QgsMultiPolygon()
+                pol.fromWkt(feature.geometry().asWkt())
+                triple['asWkt'] = pol.polygonN(0).asWkt()
+
+            for key in saveAttrs:
+                triple[key] = feature[key]
+
+            if self.dlg.comboID.currentText() == "Layer Attribute":
+                attr = feature[self.dlg.comboAttributeID.currentText()]
+                triples[attr] = triple
             else:
-                    features = self.layer.getFeatures()
+                triples[str(uuid.uuid4())] = triple
 
-            triples = {}
-            for feature in features:
+        return triples
 
-                    triple = {  }
-                    mVocab['asWkt'] = URIRef("http://www.opengis.net/ont/geosparql#asWKT")
-                    if self.dlg.checkGeometries.isChecked():
-                        pol = QgsMultiPolygon()
-                        pol.fromWkt (feature.geometry().asWkt())
-                        triple['asWkt'] = pol.polygonN(0).asWkt()
+    # criação do Grafo RDF
+    def create_rdf_graph(self, mainNamespace, prefixes, triples, save_constants,mVocab):
+        
+        g = Graph()
+        
+        g.bind(self.dlg.linePrefix2.text(), mainNamespace)
+        g.bind("geo", Namespace("http://www.opengis.net/ont/geosparql#"))
 
+        constants_p_o = []
+        for key in save_constants:
+            attr = key
+            value = save_constants[key]
+            predicate = mVocab[attr]
+            if isinstance(value, URIRef):
+                object = value
+            else:
+                object = Literal(value)
+                if validade_url(value): # talvez deveria ver pelo schema
+                    object = URIRef(value)
+            constants_p_o.append((predicate, object))
 
-                    for key in saveAttrs:
-                        triple[key] = feature[key]
-                    
+        if self.dlg.checkConstant.isChecked(): # aggregar em um dataset, por exemplo
+            aggregNamespace = Namespace(self.dlg.lineURLBase_2.text())
+            g.bind(self.dlg.linePrefix2_2.text(), aggregNamespace)
+
+            aggregate = aggregNamespace[str(uuid.uuid4())] 
+            attribute = self.dlg.comboRDFType_2.currentText()
+            url_aggregate = self.toURL(attribute)
+
+            g.add((aggregate, RDF.type, url_aggregate))
+
+            for (p, o) in constants_p_o:
+                g.add((aggregate, p, o))
+
+        for prefix, name in prefixes.items():
+            g.bind(prefix, name[0])
+
+        for id, attributes in triples.items():
+            subject = mainNamespace[id]
+            attribute = self.dlg.comboRDFType.currentText()
+            url_v = self.toURL(attribute)
+            g.add((subject, RDF.type, url_v))
+
+            for attr, value in attributes.items():
+                predicate = mVocab[attr]
+                object = Literal(value)
+                if (validade_url(value)):# talvez deveria ver pelo schema
+                    object = URIRef(value)
+
+                g.add((subject, predicate, object))
+
+            QB = Namespace("http://purl.org/linked-data/cube#")
+
+            if self.dlg.checkConstant.isChecked(): # aggregar em um dataset, por exemplo
+                attribute_p = self.dlg.comboBoxPredicate.currentText()
+                url_p = self.toURL(attribute_p)
+                g.add((subject, url_p, aggregate))
+            else:
+                for (p, o) in constants_p_o:
+                    g.add((subject, p, o))
+
+        return g
+
+    # metodo principal para save_file
+    #analisar onde é mais provavel de entrar uma task2 de acordo com o uso do processo mais intenso
+    def save_file(self):
+        try:                                                                                       #para deixar isso mais generico usar ttl e xml
+            path = str(QFileDialog.getSaveFileName(caption="Defining output file", filter="Terse RDF Triple Language(*.ttl);;XML Files (*.xml)")[0])
+
+            #Secionei essas partes pegando somente o retorno de cada função e encapsulando
+            mVocab, saveAttrs, save_constants = self.read_selected_attributes()
+            features = self.get_layer_features()
             
-                   #triples[str(uuid.uuid4())] = triple
-                    if self.dlg.comboID.currentText() == "Layer Attribute":
-                        attr = feature [self.dlg.comboAttributeID.currentText()]
-                        triples[attr] = triple
-                    else:
-                        triples[str(uuid.uuid4())] = triple
-
-
-            g = Graph()
-          
+            #aqui ele faz feature por feature, entao o processamento de dados é grande 
+            triples = self.create_rdf_triples(features, saveAttrs,mVocab)
+            
+            g=Graph()
             
             url_main = self.dlg.lineURLBase.text()
             mainNamespace = Namespace(url_main)
             
-            prefix_main = self.dlg.linePrefix2.text()
-            g.bind(prefix_main, mainNamespace)
+            #avaliar isso aqui para saber se tem mesma funcionalidade
+            prefixes = namespaces.copy()
+            prefixes["geo"] = Namespace("http://www.opengis.net/ont/geosparql#")
 
-
-            g.bind("geo", Namespace("http://www.opengis.net/ont/geosparql#"))
-
-            constants_p_o = []
-            for key in save_constants:
-                    attr = key
-                    value = save_constants[key]
-                    predicate = mVocab[attr]
-                    if (isinstance(value, URIRef)):
-                        object = value
-                    else:
-                        object = Literal(value)
-                        if (validade_url(value)): # talvez deveria ver pelo schema
-                            object = URIRef(value)
-                    constants_p_o.append ((predicate, object))
-
-
-            if self.dlg.checkConstant.isChecked (): # aggregar em um dataset, por exemplo
-                
-                aggregNamespace = Namespace(self.dlg.lineURLBase_2.text())
-            
-                g.bind(self.dlg.linePrefix2_2.text(), aggregNamespace)
-
-                aggregate = aggregNamespace[str(uuid.uuid4())] 
-
-                attribute = self.dlg.comboRDFType_2.currentText()
-                url_aggregate = self.toURL(attribute)
-
-                g.add((aggregate, RDF.type, url_aggregate))
-
-
-                for (p, o) in constants_p_o:
-                    g.add((aggregate,p, o))
-
-            for prefix, name in namespaces.items():
-                g.bind(prefix,name[0])
-                #print (prefix, name[0])
-
-            for id, attributes in triples.items():
-                subject = mainNamespace[id]
-                #g.add((subject, RDF.type, QB.Observation))
-                attribute = self.dlg.comboRDFType.currentText()
-                url_v = self.toURL(attribute)
-                g.add((subject, RDF.type, url_v))
-            
-                for attr, value in attributes.items():
-                    predicate = mVocab[attr]
-                    #print ("predicate",predicate, type(predicate))
-                    object = Literal(value)
-                    if (validade_url(value)): # talvez deveria ver pelo schema
-                        object = URIRef(value)
-                    
-                    g.add((subject, predicate, object))
-
-                QB = Namespace ("http://purl.org/linked-data/cube#")
-
-                if self.dlg.checkConstant.isChecked (): # aggregar em um dataset, por exemplo
-                    attribute_p = self.dlg.comboBoxPredicate.currentText()
-                    url_p = self.toURL(attribute_p)
-                    g.add((subject, url_p, aggregate)) # generalizar
-                else:
-                    for (p, o) in constants_p_o:
-                         g.add((subject,p, o))
-
+            g = self.create_rdf_graph(mainNamespace, prefixes, triples, save_constants,mVocab)
 
             s = g.serialize(format="turtle")
-            #print(s)   
-            
-            f = open(path,"w+",encoding="utf-8") 
+            #print(s)
+
+            f = open(path, "w+", encoding="utf-8")
             print ("saving ..."+path)
-            f.write (s)
+            f.write(s)
             f.close()
 
             self.iface.messageBar().pushMessage(
-                    "Success", "Output file written at " + path,
-                    level=Qgis.Success, duration=3
-             )
+                "Success", "Output file written at " + path,
+                level=Qgis.Success, duration=3
+            )
         except:
             pass
+        
         
     def close(self):
         self.dlg.setVisible(False)
