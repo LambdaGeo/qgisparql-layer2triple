@@ -138,7 +138,44 @@ class Layer2Triple:
         self.fields_name = []
         #self.vocab_dialog = 
 
+
     def load_vocabulary(self,task, prefix, namespace, format):
+        g = Graph()
+        g.parse(namespace, format=format)
+        return g
+
+    def fill_table2(self, prefix, exception, g=None):
+
+        if not exception :
+            print("Tarefa concluída com sucesso!")
+            print("Resultado da tarefa:", g, exception)
+            q = """
+                    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                    PREFIX owl: <http://www.w3.org/2002/07/owl#>
+
+                    SELECT ?p
+                    WHERE 
+                    {
+                    { ?p rdf:type owl:Class} UNION
+                    { ?p rdf:type owl:DatatypeProperty} UNION
+                    { ?p rdf:type owl:ObjectProperty} UNION
+                    { ?p rdf:type rdf:Property}    
+                    }
+            """
+            
+            for r in g.query(q):
+                attr = r["p"].split("#")
+                name = prefix+":"+attr[1]
+                self.concepts.append(name)
+
+            print(f'tamaho de concepts:{len(self.concepts)}')
+            print (self.concepts)
+                
+        else:
+            print("A tarefa encontrou um erro:", exception)
+
+
+    def load_vocabulary__apagar(self,task, prefix, namespace, format):
     #def load_vocabulary(self, prefix, namespace, format):
         QgsMessageLog.logMessage('the task is already running.', 'Layer2Triple')
         try:
@@ -422,8 +459,8 @@ class Layer2Triple:
 #        self.load_vocabulary(prefix, namespace, format)
  #       self.fill_table(start)
     #aqui foi feito task   
-        QgsMessageLog.logMessage('criando tarefa.', 'Layer2Triple')                                                     #,total=total_size, callback=progress_callback
-        self.task = QgsTask.fromFunction('Loading settings...', self.load_vocabulary, prefix, namespace, format, on_finished=partial(self.check_if_loading_config))  # format
+        QgsMessageLog.logMessage('criando tarefa.', 'Layer2Triple')                                                     
+        self.task = QgsTask.fromFunction('Loading settings...', self.load_vocabulary, prefix, namespace, format, on_finished= partial (self.fill_table2, prefix))  # format
         QgsApplication.taskManager().addTask(self.task)
         
     def load_fields(self):
