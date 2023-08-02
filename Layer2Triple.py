@@ -149,12 +149,11 @@ class Layer2Triple:
      
 
 
-    def load_vocabulary(self,task, prefix, namespace, format):
-        
+    def load_vocabulary(self, task, prefix, url, format):
             QgsMessageLog.logMessage('the task is already running.', 'Layer2Triple')
       
             g = Graph()
-            g.parse(namespace, format=format)
+            g.parse(url, format=format)
             q = """
                 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
                 PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -176,7 +175,7 @@ class Layer2Triple:
                 self.concepts.append(name)
             
             if prefix not in namespaces:
-                namespaces[prefix] = (Namespace(namespace), format)
+                namespaces[prefix] = (Namespace(url), format)
 
             QgsMessageLog.logMessage('Vocabulary loaded', 'Triple2Layer')
             
@@ -197,9 +196,6 @@ class Layer2Triple:
 
     def fill_table(self,start):
 
-        print ("fill", start)
-        try:
-            
             QgsMessageLog.logMessage('Loading table.', 'Layer2Triple')
             
             self.dlg.search_bar.setPlaceholderText("Filtrar concepts...")
@@ -219,7 +215,6 @@ class Layer2Triple:
                 comboBox.addItem("Vocabulary")
                 self.dlg.tableAttributes.setCellWidget(start, 1, comboBox)
                 self.dlg.tableAttributes.setCellWidget(start, 2, QLineEdit())
-                #self.dlg.tableAttributes.setCellWidget(start, 1, self.attributes_combo())
                 start += 1
 
             self.dlg.search_bar.textChanged.connect(self.filter_table)
@@ -231,10 +226,6 @@ class Layer2Triple:
                 
             self.filter_table()
 
-        except Exception as e:
-            print(f'ERRO do fill table {str(e)}')
-            QgsMessageLog.logMessage('Fail to load vocabulary', 'Layer2Triple')
-            self.errorMessage = f'Failed to fill table: no fill table {str(e)} check file settings'
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -393,6 +384,18 @@ class Layer2Triple:
 
             self.dlg.comboID.textActivated.connect(self.comboID_clicked)
 
+
+                    #"http://purl.org/linked-data/sdmx/2009/dimension#""
+
+        QgsMessageLog.logMessage('Task to loading vocabulary', 'Layer2Triple')                                        
+        self.task = QgsTask.fromFunction('Loading vocabulary...', 
+                                        self.load_vocabulary, 
+                                        prefix="sdmx", url= "http://purl.org/linked-data/sdmx/2009/dimension#", format= "ttl", 
+                                        on_finished=partial(self.fill_table_from_task)) 
+    
+        QgsApplication.taskManager().addTask(self.task)
+
+
         self.dlg.groupBoxConstants.setVisible(False)
 
         self.update_comboLayer()
@@ -407,13 +410,15 @@ class Layer2Triple:
 
     def handle_dialog_vocabulary(self):
         format = self.vocab_dlg.comboFormat.currentText()
-        namespace = self.vocab_dlg.lineURL.text()
+        url = self.vocab_dlg.lineURL.text()
         prefix = self.vocab_dlg.linePrefix.text()
+
+        #"http://purl.org/linked-data/sdmx/2009/dimension#""
 
         QgsMessageLog.logMessage('Task to loading vocabulary', 'Layer2Triple')                                        
         self.task = QgsTask.fromFunction('Loading vocabulary...', 
                                         self.load_vocabulary, 
-                                        prefix=prefix, namespace= namespace, format= format, 
+                                        prefix=prefix, url= url, format= format, 
                                         on_finished=partial(self.fill_table_from_task)) 
     
         QgsApplication.taskManager().addTask(self.task)
@@ -562,6 +567,8 @@ class Layer2Triple:
             else:
                 triples[str(uuid.uuid4())] = triple
 
+        print (triples)
+        print (len(triples))
         return triples
 
     # criação do Grafo RDF
