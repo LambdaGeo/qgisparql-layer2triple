@@ -608,7 +608,7 @@ class Layer2Triple:
         return features
 
     # criação das triplas RDF
-    def create_rdf_triples(self,task, features, saveAttrs,mVocab):
+    def create_rdf_triples(self, features, saveAttrs,mVocab):
         triples = {}
         for feature in features:
             triple = {}
@@ -630,7 +630,7 @@ class Layer2Triple:
         return triples
 
     # criação do Grafo RDF
-    def create_rdf_graph(self,task,path,mainNamespace, prefixes, save_constants,mVocab,triples):
+    def create_rdf_graph(self,mainNamespace, prefixes, save_constants,mVocab,triples):
         
         g = Graph()
         
@@ -682,7 +682,7 @@ class Layer2Triple:
 
             QB = Namespace("http://purl.org/linked-data/cube#")
 
-            if self.dlg.checkConstant.isChecked(): # aggregar em um dataset, por exemplo
+            if self.dlg.checkConstant.isChecked(): # agregar em um dataset, por exemplo
                 attribute_p = self.dlg.comboBoxPredicate.currentText()
                 url_p = self.toURL(attribute_p)
                 g.add((subject, url_p, aggregate))
@@ -724,8 +724,8 @@ class Layer2Triple:
           #  QgsApplication.taskManager().addTask(self.task2)
             
             #sem task
-            triples = self.create_rdf_triples(None,features, saveAttrs,mVocab)#processo intenso na cpu 
-            g = self.create_rdf_graph(None,path,mainNamespace, prefixes, save_constants,mVocab,triples) #processo intenso na cpu
+            triples = self.create_rdf_triples(features, saveAttrs,mVocab)#processo intenso na cpu 
+            g = self.create_rdf_graph(mainNamespace, prefixes, save_constants,mVocab,triples) #processo intenso na cpu
             s = g.serialize(format="turtle")
 
             f = open(path, "w+", encoding="utf-8")
