@@ -138,45 +138,8 @@ class Layer2Triple:
         self.fields_name = []
         #self.vocab_dialog = 
 
-
     def load_vocabulary(self,task, prefix, namespace, format):
-        g = Graph()
-        g.parse(namespace, format=format)
-        return g
-
-    def fill_table2(self, prefix, exception, g=None):
-
-        if not exception :
-            print("Tarefa concluída com sucesso!")
-            print("Resultado da tarefa:", g, exception)
-            q = """
-                    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                    PREFIX owl: <http://www.w3.org/2002/07/owl#>
-
-                    SELECT ?p
-                    WHERE 
-                    {
-                    { ?p rdf:type owl:Class} UNION
-                    { ?p rdf:type owl:DatatypeProperty} UNION
-                    { ?p rdf:type owl:ObjectProperty} UNION
-                    { ?p rdf:type rdf:Property}    
-                    }
-            """
-            
-            for r in g.query(q):
-                attr = r["p"].split("#")
-                name = prefix+":"+attr[1]
-                self.concepts.append(name)
-
-            print(f'tamaho de concepts:{len(self.concepts)}')
-            print (self.concepts)
-                
-        else:
-            print("A tarefa encontrou um erro:", exception)
-
-
-    def load_vocabulary__apagar(self,task, prefix, namespace, format):
-    #def load_vocabulary(self, prefix, namespace, format):
+        
         QgsMessageLog.logMessage('the task is already running.', 'Layer2Triple')
         try:
             g = Graph()
@@ -197,8 +160,6 @@ class Layer2Triple:
 
             # Apply the query to the graph and iterate through results
             
-            i = len(self.concepts) # o inicial para adicionar no table attributues
-
             for r in g.query(q):
                 attr = r["p"].split("#") 
                 name = prefix+":"+attr[1]
@@ -208,16 +169,14 @@ class Layer2Triple:
                 namespaces[prefix] = (Namespace(namespace), format)
 
             QgsMessageLog.logMessage('carregado os dados do dataworld.', 'Layer2Triple')
-                
-            print(f'tamaho de concepts:{len(self.concepts)}')
-            self.err=False
+            
             return len(self.concepts)
         except Exception as e:
-            print(f'ERRO do Load_vocabulary {str(e)}')
+
             QgsMessageLog.logMessage('Fail to load vocabulary', 'Layer2Triple')
             self.errorMessage = f'Failed to load vocabulary: no load_vocabulary {str(e)} check file settings'
-            self.err=True
             return None
+
 
     def filter_table(self):
         text = self.dlg.search_bar.text().lower()
@@ -228,9 +187,10 @@ class Layer2Triple:
             else:
                 self.dlg.tableAttributes.setRowHidden(row, True)
 
-    def fill_table(self,time, start):
+
+    def fill_table(self,start):
         try:
-        
+            
             QgsMessageLog.logMessage('Loading table.', 'Layer2Triple')
             
             self.dlg.search_bar.setPlaceholderText("Filtrar concepts...")
@@ -253,7 +213,6 @@ class Layer2Triple:
                 #self.dlg.tableAttributes.setCellWidget(start, 1, self.attributes_combo())
                 start += 1
 
-
             self.dlg.search_bar.textChanged.connect(self.filter_table)
 
             for c in self.concepts:
@@ -267,7 +226,6 @@ class Layer2Triple:
             print(f'ERRO do fill table {str(e)}')
             QgsMessageLog.logMessage('Fail to load vocabulary', 'Layer2Triple')
             self.errorMessage = f'Failed to fill table: no fill table {str(e)} check file settings'
-            self.err=True
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -359,6 +317,7 @@ class Layer2Triple:
 
         return action
 
+
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
@@ -383,8 +342,8 @@ class Layer2Triple:
 
 
     def update_vocabularies(self):    
-        print (self.concepts)    
-        self.fill_table(None,0)
+        #print (self.concepts)    
+        self.fill_table(0)
         if ("TRIPLEPREFIX" in settings):
             self.dlg.lineURLBase.setText(settings["TRIPLEURL"])
             self.dlg.linePrefix2.setText(settings["TRIPLEPREFIX"])
@@ -403,6 +362,7 @@ class Layer2Triple:
             self.dlg.comboAttributeID.setEnabled(True)
         else:
             self.dlg.comboAttributeID.setEnabled(False)
+
 
     def run(self):
         """Run method that performs all the real work"""
@@ -450,18 +410,16 @@ class Layer2Triple:
     def show_dialog_vocabulary(self):
         self.vocab_dlg.show()
 
+
     def handle_dialog_vocabulary(self):
         format = self.vocab_dlg.comboFormat.currentText()
         namespace = self.vocab_dlg.lineURL.text()
         prefix = self.vocab_dlg.linePrefix.text()
-#        start = len (self.concepts)
-        print (prefix, namespace, format)
-#        self.load_vocabulary(prefix, namespace, format)
- #       self.fill_table(start)
-    #aqui foi feito task   
-        QgsMessageLog.logMessage('criando tarefa.', 'Layer2Triple')                                                     
-        self.task = QgsTask.fromFunction('Loading settings...', self.load_vocabulary, prefix, namespace, format, on_finished= partial (self.fill_table2, prefix))  # format
+        QgsMessageLog.logMessage('criando tarefa.', 'Layer2Triple')                                        
+        self.task = QgsTask.fromFunction('Loading settings...', self.load_vocabulary, prefix, namespace, format, on_finished=partial(self.check_if_loading_config)) 
+        self.task.taskCompleted.connect(self.update_vocabularies)
         QgsApplication.taskManager().addTask(self.task)
+        
         
     def load_fields(self):
         
@@ -473,7 +431,7 @@ class Layer2Triple:
             for field in fields:
                 self.fields_name.append(field.name())
 
-            self.fill_table(None,0)
+            self.fill_table(0)
 
             for attr in self.fields_name:
                 self.dlg.comboAttributeID.addItem(attr)
@@ -488,8 +446,8 @@ class Layer2Triple:
             "Error", "No layer loading",
             level=Qgis.Info, duration=3)
 
-    def update_comboLayer(self):
 
+    def update_comboLayer(self):
         self.dlg.comboLayer.clear()
 
         for layer in QgsProject.instance().mapLayers().values():
@@ -512,11 +470,13 @@ class Layer2Triple:
             comboBox.addItem(attr)
         return comboBox
 
+
     def vocabularies_combo(self):
         comboBox = QComboBox()
         for c in self.concepts:
             comboBox.addItem(c)
         return comboBox
+
 
     def toURL (self, str):
         rdf_attr = str
@@ -544,71 +504,64 @@ class Layer2Triple:
             
                 
     def open_setting(self):
-            global namespaces
-            global settings
-            try:
-                path =str(QFileDialog.getOpenFileName(caption="Defining input file", filter="JSON settings file(*.json)")[0])
-                if path:
-                    #verificar se fica melhor tirando visualização
-                    #self.dlg.setVisible(False) 
-                    with open(path, "r") as file:
+        global namespaces
+        global settings
+        try:
+            path =str(QFileDialog.getOpenFileName(caption="Defining input file", filter="JSON settings file(*.json)")[0])
+            if path:
+                #verificar se fica melhor tirando visualização
+                #self.dlg.setVisible(False) 
+                with open(path, "r") as file:
+                    
+                    content = file.read()
+                    settings = json.loads(content)
+                    # Grava o dicionário settings no arquivo JSON
+                    #self.iface.mainWindow().showMaximized() 
                         
-                        content = file.read()
-                        settings = json.loads(content)
-                        # Grava o dicionário settings no arquivo JSON
-                        #self.iface.mainWindow().showMaximized() 
+                    # eliminar essa gambiarra, considerando que na configuracao so tera a URL(isso aqui é a URL,ou namespace)
+                    settings["NAMESPACES"] = {k: (lambda x: (Namespace(x[0]), x[1]  ))(v) for k, v in  settings["NAMESPACES"].items() } #incluir o namespace
+                    
+                    namespaces = settings["NAMESPACES"]
+                    
+                for key,value in namespaces.items(): 
+                    
+                    QgsMessageLog.logMessage('criando tarefa.', 'Layer2Triple')                                                    
+                    self.task = QgsTask.fromFunction('Loading settings...', self.load_vocabulary, key, str(value[0]), value[1], on_finished=partial(self.check_if_loading_config))
+                    self.task.taskCompleted.connect(self.update_vocabularies)
+                    QgsApplication.taskManager().addTask(self.task)
+                        
+                self.iface.messageBar().pushMessage(
+                        "Success",
+                    "configuration uploaded successfully...",
+                        level=Qgis.Success, duration=3
+                    )
+                #self.dlg.setVisible(True) 
+        except:
+            QgsMessageLog.logMessage('Fail, could not open the file', 'Layer2Triple')
+            self.errorMessage = 'Fail, could not open the file: check file settings'
                             
-                        # eliminar essa gambiarra, considerando que na configuracao so tera a URL
-                        settings["NAMESPACES"] = {k: (lambda x: (Namespace(x[0]), x[1]  ))(v) for k, v in  settings["NAMESPACES"].items() } #incluir o namespace
-                        namespaces = settings["NAMESPACES"]
-                        
-                    for key,value in namespaces.items(): 
-                        
-                        QgsMessageLog.logMessage('criando tarefa.', 'Layer2Triple')                                                     #,total=total_size, callback=progress_callback
-                        self.task = QgsTask.fromFunction('Loading settings...', self.load_vocabulary, key, str(value[0]), value[1], on_finished=partial(self.check_if_loading_config))  # format
-                        QgsApplication.taskManager().addTask(self.task)
-                            
-                    self.iface.messageBar().pushMessage(
-                            "Success",
-                        "configuration uploaded successfully...",
-                            level=Qgis.Success, duration=3
-                        )
-                    #self.dlg.setVisible(True) 
-            except:
-                QgsMessageLog.logMessage('Fail, could not open the file', 'Layer2Triple')
-                self.errorMessage = 'Fail, could not open the file: check file settings'
-            #self.dlg.setVisible(True) 
-                
-                pass
+            pass
 
-    def check_if_loading_config(self, task, quant_concepts):
 
-        if task.result():
+    def check_if_loading_config(self, exception, quant_concepts):
 
-            print("Tarefa concluída com sucesso!")
-            print("Resultado da tarefa:", quant_concepts, task.result())
+        if not exception:
+            #self.update_vocabularies()            
             self.iface.messageBar().pushMessage(
                 "Success",
-                "Configuration uploaded successfully...",
+                f"Configuration uploaded successfully...{quant_concepts} concepts loaded,{exception} mistakes",
                 level=Qgis.Success,
                 duration=3
             )
         else:
-            print("A tarefa encontrou um erro:", task.exception())
+            #print("A tarefa encontrou um erro:", exception)
             self.iface.messageBar().pushMessage(
                 "Error",
-                self.errorMessage,
+                f"error:{self.errorMessage}, check this exception:{exception}",
                 level=Qgis.Warning,
                 duration=3
             )
-        # continua as operações para atualizar table
-        self.fill_table(None, quant_concepts)
-        self.update_vocabularies()              
-    
- # a ideia poderia ser seccionar essa fução pois há um processo mt grande de dados
- # iteração de features
- # operações graph que demandam request atraves da rdflib   
- 
+        
     # dicts atributos e vocabulários selecionados
     def read_selected_attributes(self):
         mVocab = {}
@@ -655,7 +608,7 @@ class Layer2Triple:
         return features
 
     # criação das triplas RDF
-    def create_rdf_triples(self, features, saveAttrs,mVocab):
+    def create_rdf_triples(self,task, features, saveAttrs,mVocab):
         triples = {}
         for feature in features:
             triple = {}
@@ -677,7 +630,7 @@ class Layer2Triple:
         return triples
 
     # criação do Grafo RDF
-    def create_rdf_graph(self, mainNamespace, prefixes, save_constants,mVocab,triples):
+    def create_rdf_graph(self,task,path,mainNamespace, prefixes, save_constants,mVocab,triples):
         
         g = Graph()
         
@@ -736,40 +689,26 @@ class Layer2Triple:
             else:
                 for (p, o) in constants_p_o:
                     g.add((subject, p, o))
-
-        return g
-
-    # metodo principal para save_file
-    #analisar onde é mais provavel de entrar uma task2 de acordo com o uso do processo mais intenso
-    def run_save_file(self):
+    #        s = g.serialize(format="turtle")
+#
+ #           f = open(path, "w+", encoding="utf-8")
+  #          print ("saving ..."+path)
+   #         f.write(s)
+    #        f.close()
+            return g
         
-        pass
-    
+    # metodo principal para save_file
     def save_file(self):
-        try:                                                                                       #para deixar isso mais generico usar ttl e xml
+        try:                                                                                       
             path = str(QFileDialog.getSaveFileName(caption="Defining output file", filter="Terse RDF Triple Language(*.ttl);;XML Files (*.xml)")[0])
 
             #Secionei essas partes pegando somente o retorno de cada função e encapsulando
             mVocab, saveAttrs, save_constants = self.read_selected_attributes()
-            print(f'mVocab:{mVocab}, saveAttrs:{saveAttrs}, save_constants:{save_constants}')
-            features = self.get_layer_features()
-            print(f'features:{features}')
-            
-            #tem que ter uma thread para isso pois é um processo mt demorado feature por feature
-    #aqui pode ser possivel fazer uma barra de progresso baseado nas features carregadas (len(features))        
-#            QgsMessageLog.logMessage('criando tarefa.', 'Layer2Triple')                                                    
- #           self.task2 = QgsTask.fromFunction('Loading settings...', self.create_rdf_triples,features, saveAttrs,mVocab) 
- #pegar o retorno das triplas aqui 
-   #         QgsApplication.taskManager().addTask(self.task2)
+            features = self.get_layer_features()  
    
-            print(f'comecou create_rdf_triples')
             #aqui ele faz feature por feature, entao o processamento de dados é grande 
-            triples = self.create_rdf_triples(features, saveAttrs,mVocab)#processo intenso na cpu 
-            print(f'triples:{triples}')
-            
-            
+            #print(f'triples:{triples}')
             g=Graph()
-            print(f'grafo:{g}')
             
             url_main = self.dlg.lineURLBase.text()
             mainNamespace = Namespace(url_main)
@@ -778,28 +717,35 @@ class Layer2Triple:
             prefixes = namespaces.copy()
             prefixes["geo"] = Namespace("http://www.opengis.net/ont/geosparql#")
 
-            QgsMessageLog.logMessage('criando tarefa.', 'Layer2Triple')                                                    #verificar se isso aqui dar certo
-            self.task3 = QgsTask.fromFunction('Loading settings...',self.create_rdf_graph,mainNamespace, prefixes, save_constants,mVocab,triples,partial(g))
-#            pegar retorno do grafo 
-            QgsApplication.taskManager().addTask(self.task3)
-            print(f'g:{g}')
 
-            g = self.create_rdf_graph(mainNamespace, prefixes, save_constants,mVocab,triples) #processo intenso na cpu
-            print(f'grafo criado:{g}')
+            #com task
+        #    QgsMessageLog.logMessage('criando tarefa.', 'Layer2Triple')                                                    
+         #   self.task2 = QgsTask.fromFunction('Loading settings...', self.create_rdf_triples,features, saveAttrs,mVocab,on_finished=partial(self.create_rdf_graph,path,mainNamespace, prefixes, save_constants,mVocab)) 
+          #  QgsApplication.taskManager().addTask(self.task2)
+            
+            #sem task
+            triples = self.create_rdf_triples(None,features, saveAttrs,mVocab)#processo intenso na cpu 
+            g = self.create_rdf_graph(None,path,mainNamespace, prefixes, save_constants,mVocab,triples) #processo intenso na cpu
             s = g.serialize(format="turtle")
-            print(f"s:{s}")
 
             f = open(path, "w+", encoding="utf-8")
             print ("saving ..."+path)
             f.write(s)
             f.close()
+        
             print("tarefa concluida")
             self.iface.messageBar().pushMessage(
                 "Success", "Output file written at " + path,
                 level=Qgis.Success, duration=3
             )
-        except:
-            pass
+        except Exception as e:
+            self.iface.messageBar().pushMessage(
+                "Error",
+                f"error {e} to save file",
+                level=Qgis.Warning,
+                duration=3
+            )
+            print(f"error {e} to save file",)
         
         
     def close(self):
