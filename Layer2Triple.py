@@ -99,6 +99,16 @@ def parse_ifs(value):
         return value
 
 
+def comboBox_by_itens(itens):
+    comboBox = QComboBox()
+    for item in itens:
+        comboBox.addItem(item)
+    return comboBox
+
+
+
+
+
 class Layer2Triple:
     """QGIS Plugin Implementation."""
 
@@ -457,25 +467,11 @@ class Layer2Triple:
 
     def combo_changed(self,row, s):
         if (s == "Layer Attribute"):
-            self.dlg.tableAttributes.setCellWidget(row, 2, self.attributes_combo())
+            self.dlg.tableAttributes.setCellWidget(row, 2, comboBox_by_itens(self.fields_name))
         elif (s == "Vocabulary"):
-            self.dlg.tableAttributes.setCellWidget(row, 2, self.vocabularies_combo())
+            self.dlg.tableAttributes.setCellWidget(row, 2, comboBox_by_itens (self.concepts))
         else:
             self.dlg.tableAttributes.setCellWidget(row, 2, QLineEdit())
-
-
-    def attributes_combo(self):
-        comboBox = QComboBox()
-        for attr in self.fields_name:
-            comboBox.addItem(attr)
-        return comboBox
-
-
-    def vocabularies_combo(self):
-        comboBox = QComboBox()
-        for c in self.concepts:
-            comboBox.addItem(c)
-        return comboBox
 
 
     def toURL (self, str):
