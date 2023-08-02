@@ -146,7 +146,7 @@ class Layer2Triple:
 
         self.concepts = []
         self.fields_name = []
-        #self.vocab_dialog = 
+     
 
     def load_vocabulary(self,task, prefix, namespace, format):
         
@@ -181,6 +181,7 @@ class Layer2Triple:
             QgsMessageLog.logMessage('carregado os dados do dataworld.', 'Layer2Triple')
             
             return len(self.concepts)
+
         except Exception as e:
 
             QgsMessageLog.logMessage('Fail to load vocabulary', 'Layer2Triple')
@@ -199,6 +200,8 @@ class Layer2Triple:
 
 
     def fill_table(self,start):
+
+        print ("fill", start)
         try:
             
             QgsMessageLog.logMessage('Loading table.', 'Layer2Triple')
@@ -351,14 +354,6 @@ class Layer2Triple:
             self.iface.removeToolBarIcon(action)
 
 
-    def update_vocabularies(self):    
-        #print (self.concepts)    
-        self.fill_table(0)
-        if ("TRIPLEPREFIX" in settings):
-            self.dlg.lineURLBase.setText(settings["TRIPLEURL"])
-            self.dlg.linePrefix2.setText(settings["TRIPLEPREFIX"])
-            self.dlg.comboRDFType.setCurrentText(settings["TRIPLETYPE"])
-
 
     def show_group (self):
         if self.dlg.groupBoxConstants.isVisible():
@@ -399,7 +394,6 @@ class Layer2Triple:
 
             self.dlg.groupBoxConstants.setStyleSheet("QGroupBox { border: 0px; }")
 
-            self.update_vocabularies()
 
             self.dlg.comboID.textActivated.connect(self.comboID_clicked)
 
@@ -425,9 +419,13 @@ class Layer2Triple:
         format = self.vocab_dlg.comboFormat.currentText()
         namespace = self.vocab_dlg.lineURL.text()
         prefix = self.vocab_dlg.linePrefix.text()
-        QgsMessageLog.logMessage('criando tarefa.', 'Layer2Triple')                                        
-        self.task = QgsTask.fromFunction('Loading settings...', self.load_vocabulary, prefix, namespace, format, on_finished=partial(self.check_if_loading_config)) 
-        self.task.taskCompleted.connect(self.update_vocabularies)
+
+        QgsMessageLog.logMessage('Task to loading vocabulary', 'Layer2Triple')                                        
+        self.task = QgsTask.fromFunction('Loading vocabulary...', 
+                                        self.load_vocabulary, 
+                                        prefix, namespace, format, 
+                                        on_finished=partial(self.fill_table_from_task)) 
+    
         QgsApplication.taskManager().addTask(self.task)
         
         
@@ -478,71 +476,22 @@ class Layer2Triple:
         rdf_attr = str
         rdf = rdf_attr.split(":")
         rdf_attr = rdf[1]
-        #print (rdf)
-        #print (namespaces)
         namespace = namespaces[rdf[0]][0]
-        #print (namespace, rdf_attr)
         return namespace[rdf_attr]
 
 
     def save_setting(self):
-        try:
-            path =str(QFileDialog.getSaveFileName(caption="Defining output file", filter="JSON settings file(*.json)")[0])
-            with open(path, "w") as file:
-                # Grava o dicionário settings no arquivo JSON
-                json.dump(settings, file)
-                self.iface.messageBar().pushMessage(
-                        "Success","saved configuration",
-                        level=Qgis.Success, duration=3
-                    )
-        except:
-            pass
+        pass
             
                 
     def open_setting(self):
-        global namespaces
-        global settings
-        try:
-            path =str(QFileDialog.getOpenFileName(caption="Defining input file", filter="JSON settings file(*.json)")[0])
-            if path:
-                #verificar se fica melhor tirando visualização
-                #self.dlg.setVisible(False) 
-                with open(path, "r") as file:
-                    
-                    content = file.read()
-                    settings = json.loads(content)
-                    # Grava o dicionário settings no arquivo JSON
-                    #self.iface.mainWindow().showMaximized() 
-                        
-                    # eliminar essa gambiarra, considerando que na configuracao so tera a URL(isso aqui é a URL,ou namespace)
-                    settings["NAMESPACES"] = {k: (lambda x: (Namespace(x[0]), x[1]  ))(v) for k, v in  settings["NAMESPACES"].items() } #incluir o namespace
-                    
-                    namespaces = settings["NAMESPACES"]
-                    
-                for key,value in namespaces.items(): 
-                    
-                    QgsMessageLog.logMessage('criando tarefa.', 'Layer2Triple')                                                    
-                    self.task = QgsTask.fromFunction('Loading settings...', self.load_vocabulary, key, str(value[0]), value[1], on_finished=partial(self.check_if_loading_config))
-                    self.task.taskCompleted.connect(self.update_vocabularies)
-                    QgsApplication.taskManager().addTask(self.task)
-                        
-                self.iface.messageBar().pushMessage(
-                        "Success",
-                    "configuration uploaded successfully...",
-                        level=Qgis.Success, duration=3
-                    )
-                #self.dlg.setVisible(True) 
-        except:
-            QgsMessageLog.logMessage('Fail, could not open the file', 'Layer2Triple')
-            self.errorMessage = 'Fail, could not open the file: check file settings'
-                            
-            pass
+        pass
 
 
-    def check_if_loading_config(self, exception, quant_concepts):
+    def fill_table_from_task(self, exception, quant_concepts):
 
         if not exception:
-            #self.update_vocabularies()            
+            self.fill_table(0)       
             self.iface.messageBar().pushMessage(
                 "Success",
                 f"Configuration uploaded successfully...{quant_concepts} concepts loaded,{exception} mistakes",
