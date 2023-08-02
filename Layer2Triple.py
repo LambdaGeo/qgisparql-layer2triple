@@ -148,10 +148,11 @@ class Layer2Triple:
         self.fields_name = []
      
 
+
     def load_vocabulary(self,task, prefix, namespace, format):
         
-        QgsMessageLog.logMessage('the task is already running.', 'Layer2Triple')
-        try:
+            QgsMessageLog.logMessage('the task is already running.', 'Layer2Triple')
+      
             g = Graph()
             g.parse(namespace, format=format)
             q = """
@@ -169,7 +170,6 @@ class Layer2Triple:
             """
 
             # Apply the query to the graph and iterate through results
-            
             for r in g.query(q):
                 attr = r["p"].split("#") 
                 name = prefix+":"+attr[1]
@@ -178,15 +178,11 @@ class Layer2Triple:
             if prefix not in namespaces:
                 namespaces[prefix] = (Namespace(namespace), format)
 
-            QgsMessageLog.logMessage('carregado os dados do dataworld.', 'Layer2Triple')
+            QgsMessageLog.logMessage('Vocabulary loaded', 'Triple2Layer')
             
             return len(self.concepts)
 
-        except Exception as e:
 
-            QgsMessageLog.logMessage('Fail to load vocabulary', 'Layer2Triple')
-            self.errorMessage = f'Failed to load vocabulary: no load_vocabulary {str(e)} check file settings'
-            return None
 
 
     def filter_table(self):
@@ -401,18 +397,12 @@ class Layer2Triple:
 
         self.update_comboLayer()
 
-        # show the dialog
+    
         self.dlg.show()
-        # Run the dialog event loop
-        #result = self.dlg.exec_()
-        # See if OK was pressed
-        #if result:
-            # Do something useful here - delete the line containing pass and
-            # substitute with your code.
-        #    pass
 
     def show_dialog_vocabulary(self):
         self.vocab_dlg.show()
+
 
 
     def handle_dialog_vocabulary(self):
@@ -423,12 +413,13 @@ class Layer2Triple:
         QgsMessageLog.logMessage('Task to loading vocabulary', 'Layer2Triple')                                        
         self.task = QgsTask.fromFunction('Loading vocabulary...', 
                                         self.load_vocabulary, 
-                                        prefix, namespace, format, 
+                                        prefix=prefix, namespace= namespace, format= format, 
                                         on_finished=partial(self.fill_table_from_task)) 
     
         QgsApplication.taskManager().addTask(self.task)
         
-        
+        #(self,task, prefix, namespace, format):
+
     def load_fields(self):
         
         try:
@@ -488,8 +479,8 @@ class Layer2Triple:
         pass
 
 
-    def fill_table_from_task(self, exception, quant_concepts):
-
+    def fill_table_from_task(self, exception, quant_concepts=None):
+        print  ("fill_table", exception)
         if not exception:
             self.fill_table(0)       
             self.iface.messageBar().pushMessage(
@@ -499,10 +490,9 @@ class Layer2Triple:
                 duration=3
             )
         else:
-            #print("A tarefa encontrou um erro:", exception)
-            self.iface.messageBar().pushMessage(
-                "Error",
-                f"error:{self.errorMessage}, check this exception:{exception}",
+           self.iface.messageBar().pushMessage(
+                "Erro on load Vocabulario",
+                f"{exception}",
                 level=Qgis.Warning,
                 duration=3
             )
