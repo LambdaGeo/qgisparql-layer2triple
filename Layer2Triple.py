@@ -608,12 +608,14 @@ class Layer2Triple:
         for prefix, name in prefixes.items():
             g.bind(prefix, name[0])
 
+        
         for id, attributes in triples.items():
+            print ("id", id)
             subject = mainNamespace[id]
             attribute = self.dlg.comboRDFType.currentText()
             url_v = self.toURL(attribute)
             g.add((subject, RDF.type, url_v))
-
+            print ("attributes", attributes)
             for attr, value in attributes.items():
                 predicate = mVocab[attr]
                 object = Literal(value)
@@ -621,8 +623,8 @@ class Layer2Triple:
                     object = URIRef(value)
 
                 g.add((subject, predicate, object))
+                print (subject, predicate, object)
 
-            QB = Namespace("http://purl.org/linked-data/cube#")
 
             if self.dlg.checkConstant.isChecked(): # agregar em um dataset, por exemplo
                 attribute_p = self.dlg.comboBoxPredicate.currentText()
@@ -631,13 +633,8 @@ class Layer2Triple:
             else:
                 for (p, o) in constants_p_o:
                     g.add((subject, p, o))
-    #        s = g.serialize(format="turtle")
-#
- #           f = open(path, "w+", encoding="utf-8")
-  #          print ("saving ..."+path)
-   #         f.write(s)
-    #        f.close()
-            return g
+
+        return g
         
     # metodo principal para save_file
     def save_file(self):
