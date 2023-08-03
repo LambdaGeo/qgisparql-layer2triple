@@ -362,12 +362,25 @@
                <item>
                 <widget class="QComboBox" name="comboBoxPredicate">
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
                  </property>
                 </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_2">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
                </item>
               </layout>
              </item>
@@ -467,9 +480,15 @@
     </property>
     <addaction name="actionSave"/>
     <addaction name="actionOpen"/>
+   </widget>
+   <widget class="QMenu" name="menuVocabulary">
+    <property name="title">
+     <string>Vocabulary</string>
+    </property>
     <addaction name="actionLoad_Vocabulary"/>
    </widget>
    <addaction name="menuSettings"/>
+   <addaction name="menuVocabulary"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionSave">
