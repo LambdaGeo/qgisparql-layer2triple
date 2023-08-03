@@ -521,7 +521,7 @@ class Layer2Triple:
         else:
             features = self.layer.getFeatures()
 
-        return features
+        return list(features)
 
 
     def create_progress_dialog (self,title,total):
@@ -538,7 +538,7 @@ class Layer2Triple:
     # criação das triplas RDF
     def create_rdf_triples(self, features, saveAttrs,mVocab):
         triples = {}
-        total = len(list(features))
+        total = len(features)
         progressDialog = self.create_progress_dialog(f"Exporting features {total}", total)
         print ("create_rdf_triples")
         i = 1
@@ -560,7 +560,7 @@ class Layer2Triple:
                 triples[str(uuid.uuid4())] = triple
 
             progressDialog.setValue(i)
-            print (i)
+            #print (i)
             progressDialog.setLabelText( "Exporting feature {} of {}".format(i, total))
             QCoreApplication.processEvents()
             i += 1
