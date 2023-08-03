@@ -24,7 +24,7 @@
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from PyQt5.QtCore import Qt
-from qgis.PyQt.QtWidgets import QAction, QTableWidgetItem, QTableWidget, QCheckBox, QComboBox, QLineEdit, QFileDialog,QProgressDialog,QGroupBox,QVBoxLayout,QHBoxLayout,QPushButton,QApplication
+from qgis.PyQt.QtWidgets import QAction, QTableWidgetItem, QTableWidget, QCheckBox, QDialogButtonBox,QComboBox, QLineEdit, QFileDialog,QProgressDialog,QGroupBox,QVBoxLayout,QHBoxLayout,QPushButton,QApplication
 from qgis.core import QgsProject, Qgis, QgsVectorLayer, QgsRasterLayer,   QgsMultiPolygon,QgsMessageLog,QgsTask, QgsApplication
 
 # Initialize Qt resources from file resources.py
@@ -257,8 +257,9 @@ class Layer2Triple:
             self.vocab_dlg = VocabularyDialog()
 
             self.vocab_dlg.buttonBox.accepted.connect(self.handle_dialog_vocabulary)
-            self.dlg.buttonBox.accepted.connect(self.save_file)
-            self.dlg.buttonBox.rejected.connect(self.close)
+            
+            self.dlg.pushButtonSave.clicked.connect(self.save_file)
+            self.dlg.pushButtonCancel.clicked.connect(self.close)
             self.dlg.button_load_layer.clicked.connect(self.load_fields)
             self.dlg.actionSave.triggered.connect(self.save_setting)
             self.dlg.actionOpen.triggered.connect(self.open_setting)
@@ -271,8 +272,8 @@ class Layer2Triple:
 
             self.dlg.comboID.textActivated.connect(self.comboID_clicked)
 
+    
 
-                    #"http://purl.org/linked-data/sdmx/2009/dimension#""
 
         QgsMessageLog.logMessage('Task to loading vocabulary', 'Layer2Triple')                                        
         self.task = QgsTask.fromFunction('Loading vocabulary...', 
@@ -415,6 +416,8 @@ class Layer2Triple:
             for attr in self.fields_name:
                 self.dlg.comboAttributeID.addItem(attr)
 
+            self.dlg.pushButtonSave.setEnabled(True)
+
             self.iface.messageBar().pushMessage(
                 "Success", "Load Layer fields",
                 level=Qgis.Success, duration=3
@@ -458,7 +461,6 @@ class Layer2Triple:
 
 
     def fill_table_from_task(self, exception, quant_concepts=None):
-        #print  ("fill_table", exception)
         if not exception:
             self.fill_table(0)       
             self.iface.messageBar().pushMessage(
