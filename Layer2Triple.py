@@ -49,27 +49,8 @@ from rdflib.namespace import DC, FOAF
 import json
 
 
- 
-settings = {
 
-    "TRIPLEPREFIX" : "obs",
-    "TRIPLEURL" : "https://purl.org/dbcells/observation#",
-    "TRIPLETYPE" : "qb:Observation",
-
-    "NAMESPACES" : {
-        #'dbc': (Namespace("http://www.purl.org/linked-data/dbcells#"), 'ttl'),
-        #'geo' : (Namespace ("http://www.opengis.net/ont/geosparql"), 'xml'),
-        #'sdmx' : (Namespace ("http://purl.org/linked-data/sdmx/2009/dimension#"), 'ttl'),
-        #'dbc-attribute' : (Namespace ("http://www.purl.org/linked-data/dbcells/attribute#"), "ttl"),
-        #'dbc-measure' : (Namespace ("http://www.purl.org/linked-data/dbcells/measure#"), "ttl"),
-        #'dbc-code' : (Namespace ("http://www.purl.org/linked-data/dbcells/code#"), "ttl"),
-        #'qb' : (Namespace ("http://purl.org/linked-data/cube#"), "ttl")
-    }
- }
-
-# depois vou remover essa variavel, evitar isso
-namespaces = settings["NAMESPACES"]
-
+# utils --------------------------------------------------
 def validade_url(s):
     if (type(s) != str ):
         return False
@@ -105,7 +86,7 @@ def comboBox_by_itens(itens):
         comboBox.addItem(item)
     return comboBox
 
-
+#------------------------------------------------------
 
 
 
@@ -146,88 +127,11 @@ class Layer2Triple:
 
         self.concepts = []
         self.fields_name = []
-     
 
+        self.namespaces = {"geo": Namespace("http://www.opengis.net/ont/geosparql#")} # save os namespaces carregads
+       
 
-    def load_vocabulary(self, task, prefix, url, format):
-            QgsMessageLog.logMessage('the task is already running.', 'Layer2Triple')
-      
-            g = Graph()
-            g.parse(url, format=format)
-            q = """
-                PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                PREFIX owl: <http://www.w3.org/2002/07/owl#>
-
-                SELECT ?p
-                WHERE 
-                {
-                    { ?p rdf:type owl:Class} UNION
-                { ?p rdf:type owl:DatatypeProperty} UNION
-                { ?p rdf:type owl:ObjectProperty} UNION
-                { ?p rdf:type rdf:Property}    
-                }
-            """
-
-            # Apply the query to the graph and iterate through results
-            for r in g.query(q):
-                attr = r["p"].split("#") 
-                name = prefix+":"+attr[1]
-                self.concepts.append(name)
-            
-            if prefix not in namespaces:
-                namespaces[prefix] = (Namespace(url), format)
-
-            QgsMessageLog.logMessage('Vocabulary loaded', 'Triple2Layer')
-            
-            return len(self.concepts)
-
-
-
-
-    def filter_table(self):
-        text = self.dlg.search_bar.text().lower()
-        for row in range(self.dlg.tableAttributes.rowCount()):
-            concept = self.dlg.tableAttributes.cellWidget(row, 0).text().lower()
-            if text in concept:
-                self.dlg.tableAttributes.setRowHidden(row, False)
-            else:
-                self.dlg.tableAttributes.setRowHidden(row, True)
-
-
-    def fill_table(self,start):
-
-            QgsMessageLog.logMessage('Loading table.', 'Layer2Triple')
-            
-            self.dlg.search_bar.setPlaceholderText("Filtrar concepts...")
-
-            # Configura a tabela de atributos
-            self.dlg.tableAttributes.setRowCount(len(self.concepts))
-            self.dlg.tableAttributes.setColumnCount(3)
-            self.dlg.tableAttributes.setHorizontalHeaderLabels(["Concepts", "Type", "Value"])
-
-            for c in self.concepts[start:]:
-                print(f"Debug: c = {c}, start = {start}")
-                self.dlg.tableAttributes.setCellWidget(start, 0, QCheckBox(c))
-                comboBox = QComboBox()
-                comboBox.textActivated.connect(partial(self.combo_changed, start))
-                comboBox.addItem("Constant Value")
-                comboBox.addItem("Layer Attribute")
-                comboBox.addItem("Vocabulary")
-                self.dlg.tableAttributes.setCellWidget(start, 1, comboBox)
-                self.dlg.tableAttributes.setCellWidget(start, 2, QLineEdit())
-                start += 1
-
-            self.dlg.search_bar.textChanged.connect(self.filter_table)
-
-            for c in self.concepts:
-                self.dlg.comboRDFType.addItem(c)
-                self.dlg.comboRDFType_2.addItem(c)
-                self.dlg.comboBoxPredicate.addItem(c)
-                
-            self.filter_table()
-
-
-    # noinspection PyMethodMayBeStatic
+        # noinspection PyMethodMayBeStatic
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
 
@@ -341,21 +245,6 @@ class Layer2Triple:
             self.iface.removeToolBarIcon(action)
 
 
-
-    def show_group (self):
-        if self.dlg.groupBoxConstants.isVisible():
-            self.dlg.groupBoxConstants.setVisible(False)
-        else:
-            self.dlg.groupBoxConstants.setVisible(True)
-        
-
-    def comboID_clicked (self):
-        if self.dlg.comboID.currentText() == "Layer Attribute":
-            self.dlg.comboAttributeID.setEnabled(True)
-        else:
-            self.dlg.comboAttributeID.setEnabled(False)
-
-
     def run(self):
         """Run method that performs all the real work"""
 
@@ -367,8 +256,6 @@ class Layer2Triple:
 
             self.vocab_dlg = VocabularyDialog()
 
-            #self.dlg.buttonLoad.clicked.connect(handle_dialog_vocabulary)
-
             self.vocab_dlg.buttonBox.accepted.connect(self.handle_dialog_vocabulary)
             self.dlg.buttonBox.accepted.connect(self.save_file)
             self.dlg.buttonBox.rejected.connect(self.close)
@@ -377,7 +264,7 @@ class Layer2Triple:
             self.dlg.actionOpen.triggered.connect(self.open_setting)
             self.dlg.actionLoad_Vocabulary.triggered.connect(self.show_dialog_vocabulary)
 
-            self.dlg.pushShowGroup.clicked.connect(self.show_group)
+            self.dlg.pushShowGroup.clicked.connect(self.show_aggregated_group)
 
             self.dlg.groupBoxConstants.setStyleSheet("QGroupBox { border: 0px; }")
 
@@ -403,6 +290,95 @@ class Layer2Triple:
     
         self.dlg.show()
 
+    def fill_table(self,start):
+
+            QgsMessageLog.logMessage('Loading table.', 'Layer2Triple')
+            
+            self.dlg.search_bar.setPlaceholderText("Filtrar concepts...")
+
+            # Configura a tabela de atributos
+            self.dlg.tableAttributes.setRowCount(len(self.concepts))
+            self.dlg.tableAttributes.setColumnCount(3)
+            self.dlg.tableAttributes.setHorizontalHeaderLabels(["Concepts", "Type", "Value"])
+
+            for c in self.concepts[start:]:
+                print(f"Debug: c = {c}, start = {start}")
+                self.dlg.tableAttributes.setCellWidget(start, 0, QCheckBox(c))
+                comboBox = QComboBox()
+                comboBox.textActivated.connect(partial(self.combo_changed, start))
+                comboBox.addItem("Constant Value")
+                comboBox.addItem("Layer Attribute")
+                comboBox.addItem("Vocabulary")
+                self.dlg.tableAttributes.setCellWidget(start, 1, comboBox)
+                self.dlg.tableAttributes.setCellWidget(start, 2, QLineEdit())
+                start += 1
+
+            self.dlg.search_bar.textChanged.connect(self.filter_table)
+
+            for c in self.concepts:
+                self.dlg.comboRDFType.addItem(c)
+                self.dlg.comboRDFType_2.addItem(c)
+                self.dlg.comboBoxPredicate.addItem(c)
+
+
+    def filter_table(self):
+        text = self.dlg.search_bar.text().lower()
+        for row in range(self.dlg.tableAttributes.rowCount()):
+            concept = self.dlg.tableAttributes.cellWidget(row, 0).text().lower()
+            if text in concept:
+                self.dlg.tableAttributes.setRowHidden(row, False)
+            else:
+                self.dlg.tableAttributes.setRowHidden(row, True)
+
+    def load_vocabulary(self, task, prefix, url, format):
+            QgsMessageLog.logMessage('the task is already running.', 'Layer2Triple')
+      
+            g = Graph()
+            g.parse(url, format=format)
+            q = """
+                PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                PREFIX owl: <http://www.w3.org/2002/07/owl#>
+
+                SELECT ?p
+                WHERE 
+                {
+                    { ?p rdf:type owl:Class} UNION
+                { ?p rdf:type owl:DatatypeProperty} UNION
+                { ?p rdf:type owl:ObjectProperty} UNION
+                { ?p rdf:type rdf:Property}    
+                }
+            """
+
+            # Apply the query to the graph and iterate through results
+            for r in g.query(q):
+                attr = r["p"].split("#") 
+                name = prefix+":"+attr[1]
+                self.concepts.append(name)
+            
+            if prefix not in self.namespaces:
+                self.namespaces[prefix] = Namespace(url)
+
+            QgsMessageLog.logMessage('Vocabulary loaded', 'Triple2Layer')
+            
+            return len(self.concepts)
+
+
+    def show_aggregated_group (self):
+        if self.dlg.groupBoxConstants.isVisible():
+            self.dlg.groupBoxConstants.setVisible(False)
+        else:
+            self.dlg.groupBoxConstants.setVisible(True)
+        
+
+    def comboID_clicked (self):
+        if self.dlg.comboID.currentText() == "Layer Attribute":
+            self.dlg.comboAttributeID.setEnabled(True)
+        else:
+            self.dlg.comboAttributeID.setEnabled(False)
+
+
+
+
     def show_dialog_vocabulary(self):
         self.vocab_dlg.show()
 
@@ -423,7 +399,6 @@ class Layer2Triple:
     
         QgsApplication.taskManager().addTask(self.task)
         
-        #(self,task, prefix, namespace, format):
 
     def load_fields(self):
         
@@ -447,8 +422,8 @@ class Layer2Triple:
         except:
             
             self.iface.messageBar().pushMessage(
-            "Error", "No layer loading",
-            level=Qgis.Info, duration=3)
+            "Error", "Erro on loading layer",
+            level=Qgis.Warning, duration=3)
 
 
     def update_comboLayer(self):
@@ -468,12 +443,10 @@ class Layer2Triple:
             self.dlg.tableAttributes.setCellWidget(row, 2, QLineEdit())
 
 
-    def toURL (self, str):
-        rdf_attr = str
-        rdf = rdf_attr.split(":")
-        rdf_attr = rdf[1]
-        namespace = namespaces[rdf[0]][0]
-        return namespace[rdf_attr]
+    def toURL (self, concept):    
+        prefix, predicate = concept.split(":")
+        return self.namespaces[prefix][predicate]
+        
 
 
     def save_setting(self):
@@ -485,7 +458,7 @@ class Layer2Triple:
 
 
     def fill_table_from_task(self, exception, quant_concepts=None):
-        print  ("fill_table", exception)
+        #print  ("fill_table", exception)
         if not exception:
             self.fill_table(0)       
             self.iface.messageBar().pushMessage(
@@ -507,34 +480,37 @@ class Layer2Triple:
         mVocab = {}
         saveAttrs = {}
         save_constants = {}
-
+        #print ("read_selected_attributes")
         for row in range(self.dlg.tableAttributes.rowCount()): 
-            check = self.dlg.tableAttributes.cellWidget(row, 0) 
-            if check.isChecked():
-                rdf_attr = check.text()
-                rdf = rdf_attr.split(":")
-                rdf_attr = rdf[1]
-                namespace = namespaces[rdf[0]][0]
-                url_rdf = namespace[rdf_attr]
+            concept = self.dlg.tableAttributes.cellWidget(row, 0) 
+            if concept.isChecked():
+
+                concept_text = concept.text()
+                
+                prefix, predicate = concept_text.split(":")
+                         
+                namespace_url = self.namespaces[prefix][predicate]
 
                 combo_type = self.dlg.tableAttributes.cellWidget(row, 1)
 
                 if combo_type.currentText() == "Layer Attribute":
                     combo = self.dlg.tableAttributes.cellWidget(row, 2)
                     attribute = combo.currentText()
-                    saveAttrs[attribute] = rdf_attr
-                    mVocab[attribute] =  url_rdf
+                    saveAttrs[attribute] = predicate
+                    mVocab[attribute] =  namespace_url
+                
                 elif combo_type.currentText() == "Vocabulary":
                     combo = self.dlg.tableAttributes.cellWidget(row, 2)
                     attribute = combo.currentText()
                     url_v = self.toURL(attribute)
-                    save_constants[rdf_attr] = url_v
-                    mVocab[rdf_attr] =  url_rdf
+                    save_constants[predicate] = url_v
+                    mVocab[predicate] =  namespace_url
                 else:
                     line_edit = self.dlg.tableAttributes.cellWidget(row, 2)
-                    save_constants[rdf_attr] = parse_ifs(line_edit.text())
-                    mVocab[rdf_attr] =  url_rdf
+                    save_constants[predicate] = parse_ifs(line_edit.text())
+                    mVocab[predicate] =  namespace_url
 
+        print (mVocab, saveAttrs, save_constants)
         return mVocab, saveAttrs, save_constants
         
 
@@ -547,9 +523,25 @@ class Layer2Triple:
 
         return features
 
+
+    def create_progress_dialog (self,title,total):
+        progressDialog = QProgressDialog(
+            title, "Cancel", 0, 0, self.iface.mainWindow())
+        print (total)
+        progressDialog.setWindowTitle(title)
+        progressDialog.setMaximum(total)
+        progressDialog.setValue(0)
+        progressDialog.show()
+        progressDialog.setCancelButton(None)
+        return progressDialog
+
     # criação das triplas RDF
     def create_rdf_triples(self, features, saveAttrs,mVocab):
         triples = {}
+        total = len(list(features))
+        progressDialog = self.create_progress_dialog(f"Exporting features {total}", total)
+        print ("create_rdf_triples")
+        i = 1
         for feature in features:
             triple = {}
             mVocab['asWkt'] = URIRef("http://www.opengis.net/ont/geosparql#asWKT")
@@ -567,18 +559,16 @@ class Layer2Triple:
             else:
                 triples[str(uuid.uuid4())] = triple
 
-        print (triples)
-        print (len(triples))
+            progressDialog.setValue(i)
+            print (i)
+            progressDialog.setLabelText( "Exporting feature {} of {}".format(i, total))
+            QCoreApplication.processEvents()
+            i += 1
+
         return triples
 
-    # criação do Grafo RDF
-    def create_rdf_graph(self,mainNamespace, prefixes, save_constants,mVocab,triples):
-        
-        g = Graph()
-        
-        g.bind(self.dlg.linePrefix2.text(), mainNamespace)
-        g.bind("geo", Namespace("http://www.opengis.net/ont/geosparql#"))
 
+    def read_constants (self, save_constants, mVocab):
         constants_p_o = []
         for key in save_constants:
             attr = key
@@ -590,93 +580,91 @@ class Layer2Triple:
                 object = Literal(value)
                 if validade_url(value): # talvez deveria ver pelo schema
                     object = URIRef(value)
+
             constants_p_o.append((predicate, object))
+        return constants_p_o
 
-        if self.dlg.checkConstant.isChecked(): # aggregar em um dataset, por exemplo
-            aggregNamespace = Namespace(self.dlg.lineURLBase_2.text())
-            g.bind(self.dlg.linePrefix2_2.text(), aggregNamespace)
-
-            aggregate = aggregNamespace[str(uuid.uuid4())] 
-            attribute = self.dlg.comboRDFType_2.currentText()
-            url_aggregate = self.toURL(attribute)
-
-            g.add((aggregate, RDF.type, url_aggregate))
-
-            for (p, o) in constants_p_o:
-                g.add((aggregate, p, o))
-
-        for prefix, name in prefixes.items():
-            g.bind(prefix, name[0])
-
+    # criação do Grafo RDF
+    def create_rdf_graph(self,mainNamespace, save_constants,mVocab, path, triples):
+ 
+        try:
+            g = Graph()
+            
+            g.bind(self.dlg.linePrefix2.text(), mainNamespace)
         
-        for id, attributes in triples.items():
-            print ("id", id)
-            subject = mainNamespace[id]
-            attribute = self.dlg.comboRDFType.currentText()
-            url_v = self.toURL(attribute)
-            g.add((subject, RDF.type, url_v))
-            print ("attributes", attributes)
-            for attr, value in attributes.items():
-                predicate = mVocab[attr]
-                object = Literal(value)
-                if (validade_url(value)):# talvez deveria ver pelo schema
-                    object = URIRef(value)
+            constants_p_o = self.read_constants(save_constants, mVocab)
+    
+            if self.dlg.checkConstant.isChecked(): # aggregar em um dataset, por exemplo
+                aggregNamespace = Namespace(self.dlg.lineURLBase_2.text())
+                g.bind(self.dlg.linePrefix2_2.text(), aggregNamespace)
 
-                g.add((subject, predicate, object))
-                print (subject, predicate, object)
+                aggregate = aggregNamespace[str(uuid.uuid4())] 
+                attribute = self.dlg.comboRDFType_2.currentText()
+                url_aggregate = self.toURL(attribute)
 
+                g.add((aggregate, RDF.type, url_aggregate))
 
-            if self.dlg.checkConstant.isChecked(): # agregar em um dataset, por exemplo
-                attribute_p = self.dlg.comboBoxPredicate.currentText()
-                url_p = self.toURL(attribute_p)
-                g.add((subject, url_p, aggregate))
-            else:
                 for (p, o) in constants_p_o:
-                    g.add((subject, p, o))
+                    g.add((aggregate, p, o))
 
-        return g
-        
-    # metodo principal para save_file
-    def save_file(self):
-        try:                                                                                       
-            path = str(QFileDialog.getSaveFileName(caption="Defining output file", filter="Terse RDF Triple Language(*.ttl);;XML Files (*.xml)")[0])
+            for prefix, name in self.namespaces.items():
+                g.bind(prefix, name)
 
-            #Secionei essas partes pegando somente o retorno de cada função e encapsulando
-            mVocab, saveAttrs, save_constants = self.read_selected_attributes()
-            features = self.get_layer_features()  
-   
-            #aqui ele faz feature por feature, entao o processamento de dados é grande 
-            #print(f'triples:{triples}')
-            g=Graph()
             
-            url_main = self.dlg.lineURLBase.text()
-            mainNamespace = Namespace(url_main)
-            
-            #avaliar isso aqui para saber se tem mesma funcionalidade
-            prefixes = namespaces.copy()
-            prefixes["geo"] = Namespace("http://www.opengis.net/ont/geosparql#")
+            for id, attributes in triples.items():
+                
+                subject = mainNamespace[id]
+                attribute = self.dlg.comboRDFType.currentText()
+                url_v = self.toURL(attribute)
+                g.add((subject, RDF.type, url_v))
+                
+                for attr, value in attributes.items():
+                    predicate = mVocab[attr]
+                    object = Literal(value)
+                    if (validade_url(value)):# talvez deveria ver pelo schema
+                        object = URIRef(value)
 
+                    g.add((subject, predicate, object))
+                    
 
-            #com task
-        #    QgsMessageLog.logMessage('criando tarefa.', 'Layer2Triple')                                                    
-         #   self.task2 = QgsTask.fromFunction('Loading settings...', self.create_rdf_triples,features, saveAttrs,mVocab,on_finished=partial(self.create_rdf_graph,path,mainNamespace, prefixes, save_constants,mVocab)) 
-          #  QgsApplication.taskManager().addTask(self.task2)
-            
-            #sem task
-            triples = self.create_rdf_triples(features, saveAttrs,mVocab)#processo intenso na cpu 
-            g = self.create_rdf_graph(mainNamespace, prefixes, save_constants,mVocab,triples) #processo intenso na cpu
+                if self.dlg.checkConstant.isChecked(): # agregar em um dataset, por exemplo
+                    attribute_p = self.dlg.comboBoxPredicate.currentText()
+                    url_p = self.toURL(attribute_p)
+                    g.add((subject, url_p, aggregate))
+                else:
+                    for (p, o) in constants_p_o:
+                        g.add((subject, p, o))
+
             s = g.serialize(format="turtle")
 
             f = open(path, "w+", encoding="utf-8")
             print ("saving ..."+path)
             f.write(s)
             f.close()
-        
+            
             print("tarefa concluida")
             self.iface.messageBar().pushMessage(
                 "Success", "Output file written at " + path,
-                level=Qgis.Success, duration=3
+                    level=Qgis.Success, duration=3
             )
+        except Exception as e:
+            pass
+
+            
+    # metodo principal para save_file
+    def save_file(self):
+        try:                                                                                       
+            path = str(QFileDialog.getSaveFileName(caption="Defining output file", filter="Terse RDF Triple Language(*.ttl);;XML Files (*.xml)")[0])
+
+            mVocab, saveAttrs, save_constants = self.read_selected_attributes()
+            features = self.get_layer_features()  
+           
+            url_main = self.dlg.lineURLBase.text()
+            mainNamespace = Namespace(url_main)
+                  
+            triples = self.create_rdf_triples(features, saveAttrs,mVocab)
+            self.create_rdf_graph(mainNamespace, save_constants,mVocab, path , triples) 
+
         except Exception as e:
             self.iface.messageBar().pushMessage(
                 "Error",
@@ -685,7 +673,6 @@ class Layer2Triple:
                 duration=3
             )
             print(f"error {e} to save file",)
-        
-        
+                
     def close(self):
         self.dlg.setVisible(False)
