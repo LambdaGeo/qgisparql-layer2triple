@@ -622,6 +622,10 @@ class Layer2Triple:
                 g.bind(prefix, name)
 
             
+            total = len (triples)
+            progressDialog = self.create_progress_dialog(f"Saving graph {total}", total)
+
+            i = 1
             for id, attributes in triples.items():
                 
                 subject = mainNamespace[id]
@@ -645,6 +649,13 @@ class Layer2Triple:
                 else:
                     for (p, o) in constants_p_o:
                         g.add((subject, p, o))
+
+                
+                progressDialog.setValue(i)
+
+                progressDialog.setLabelText( "Saving graph {} of {}".format(i, total))
+                QCoreApplication.processEvents()
+                i += 1
 
             s = g.serialize(format="turtle")
 
