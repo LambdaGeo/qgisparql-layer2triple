@@ -428,9 +428,19 @@
            </spacer>
           </item>
           <item>
-           <widget class="QDialogButtonBox" name="buttonBox">
-            <property name="standardButtons">
-             <set>QDialogButtonBox::Cancel|QDialogButtonBox::Save</set>
+           <widget class="QPushButton" name="pushButtonCancel">
+            <property name="text">
+             <string>Cancel</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButtonSave">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="text">
+             <string>Save</string>
             </property>
            </widget>
           </item>
