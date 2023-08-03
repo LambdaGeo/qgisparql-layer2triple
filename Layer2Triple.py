@@ -292,17 +292,19 @@ class Layer2Triple:
             self.dlg.tableAttributes.setColumnCount(3)
             self.dlg.tableAttributes.setHorizontalHeaderLabels(["Concepts", "Type", "Value"])
 
+            i = start
             for c in self.concepts[start:]:
-                print(f"Debug: c = {c}, start = {start}")
-                self.dlg.tableAttributes.setCellWidget(start, 0, QCheckBox(c))
+                print(f"Debug: c = {c}, i = {i}")
+                self.dlg.tableAttributes.setCellWidget(i, 0, QCheckBox(c))
                 comboBox = QComboBox()
-                comboBox.textActivated.connect(partial(self.combo_changed, start))
+                comboBox.textActivated.connect(partial(self.combo_changed, i))
                 comboBox.addItem("Constant Value")
                 comboBox.addItem("Layer Attribute")
                 comboBox.addItem("Vocabulary")
-                self.dlg.tableAttributes.setCellWidget(start, 1, comboBox)
-                self.dlg.tableAttributes.setCellWidget(start, 2, QLineEdit())
-                start += 1
+                self.dlg.tableAttributes.setCellWidget(i, 1, comboBox)
+                self.dlg.tableAttributes.setCellWidget(i, 2, QLineEdit())
+                
+                i += 1
 
             self.dlg.search_bar.textChanged.connect(self.filter_table)
 
@@ -454,7 +456,7 @@ class Layer2Triple:
 
             path =str(QFileDialog.getOpenFileName(caption="Defining input file", filter="JSON settings file(*.json)")[0])
             with open(path, "r") as file:
-                
+
                 settings = json.loads(file.read())
                 # resume state        
                 self.namespaces = {k:  Namespace(v) for k, v in  settings["namespaces"].items() } #incluir o namespace
@@ -484,7 +486,7 @@ class Layer2Triple:
         mVocab = {}
         saveAttrs = {}
         save_constants = {}
-        #print ("read_selected_attributes")
+
         for row in range(self.dlg.tableAttributes.rowCount()): 
             concept = self.dlg.tableAttributes.cellWidget(row, 0) 
             if concept.isChecked():
@@ -514,7 +516,6 @@ class Layer2Triple:
                     save_constants[predicate] = parse_ifs(line_edit.text())
                     mVocab[predicate] =  namespace_url
 
-        print (mVocab, saveAttrs, save_constants)
         return mVocab, saveAttrs, save_constants
         
 
@@ -531,7 +532,6 @@ class Layer2Triple:
     def create_progress_dialog (self,title,total):
         progressDialog = QProgressDialog(
             title, "Cancel", 0, 0, self.iface.mainWindow())
-        print (total)
         progressDialog.setWindowTitle(title)
         progressDialog.setMaximum(total)
         progressDialog.setValue(0)
@@ -544,7 +544,7 @@ class Layer2Triple:
         triples = {}
         total = len(features)
         progressDialog = self.create_progress_dialog(f"Exporting features {total}", total)
-        print ("create_rdf_triples")
+
         i = 1
         for feature in features:
             triple = {}
@@ -564,7 +564,7 @@ class Layer2Triple:
                 triples[str(uuid.uuid4())] = triple
 
             progressDialog.setValue(i)
-            #print (i)
+
             progressDialog.setLabelText( "Exporting feature {} of {}".format(i, total))
             QCoreApplication.processEvents()
             i += 1
@@ -642,11 +642,11 @@ class Layer2Triple:
             s = g.serialize(format="turtle")
 
             f = open(path, "w+", encoding="utf-8")
-            print ("saving ..."+path)
+            
             f.write(s)
             f.close()
             
-            print("tarefa concluida")
+        
             self.iface.messageBar().pushMessage(
                 "Success", "Output file written at " + path,
                     level=Qgis.Success, duration=3
@@ -676,7 +676,7 @@ class Layer2Triple:
                 level=Qgis.Warning,
                 duration=3
             )
-            print(f"error {e} to save file",)
+        
                 
     def close(self):
         self.dlg.setVisible(False)
