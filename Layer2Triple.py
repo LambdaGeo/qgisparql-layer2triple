@@ -272,16 +272,6 @@ class Layer2Triple:
 
             self.dlg.comboID.textActivated.connect(self.comboID_clicked)
 
-    
-
-
-        QgsMessageLog.logMessage('Task to loading vocabulary', 'Layer2Triple')                                        
-        self.task = QgsTask.fromFunction('Loading vocabulary...', 
-                                        self.load_vocabulary, 
-                                        prefix="sdmx", url= "http://purl.org/linked-data/sdmx/2009/dimension#", format= "ttl", 
-                                        on_finished=partial(self.fill_table_from_task)) 
-    
-        QgsApplication.taskManager().addTask(self.task)
 
 
         self.dlg.groupBoxConstants.setVisible(False)
@@ -453,12 +443,24 @@ class Layer2Triple:
 
 
     def save_setting(self):
-        pass
+        path =str(QFileDialog.getSaveFileName(caption="Defining output file", filter="JSON settings file(*.json)")[0])
+        with open(path, "w") as file:
+            # Grava o dicionário settings no arquivo JSON
+            settings = {"concepts":self.concepts, "namespaces": self.namespaces}
+            json.dump(settings, file)
             
                 
     def open_setting(self):
-        pass
 
+            path =str(QFileDialog.getOpenFileName(caption="Defining input file", filter="JSON settings file(*.json)")[0])
+            with open(path, "r") as file:
+                
+                settings = json.loads(file.read())
+                # resume state        
+                self.namespaces = {k:  Namespace(v) for k, v in  settings["namespaces"].items() } #incluir o namespace
+                self.concepts = settings["concepts"]
+                self.fill_table(0)
+                
 
     def fill_table_from_task(self, exception, quant_concepts=None):
         if not exception:
