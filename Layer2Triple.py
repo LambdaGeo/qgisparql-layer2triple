@@ -595,11 +595,43 @@ class Layer2Triple:
             constants_p_o.append((predicate, object))
         return constants_p_o
 
+    def save_to_ttl (self, task, path, g):
+            s = g.serialize(format="turtle")
+
+            f = open(path, "w+", encoding="utf-8")
+            
+            f.write(s)
+            f.close()
+            
+        
+
+
+    def pos_save_to_ttl (self,path, exception, result= None):
+        self.iface.messageBar().clearWidgets()
+        
+        if not exception:
+
+            self.iface.messageBar().pushMessage(
+                "Success", "Output file written at " + path,
+                    level=Qgis.Success, duration=3
+            )
+        else:
+
+            self.iface.messageBar().pushMessage(
+                "Warning", "Error on save file written at " + path,
+                    level=Qgis.Warning, duration=3
+            )
+
     # criação do Grafo RDF
     def create_rdf_graph(self,mainNamespace, save_constants,mVocab, path, triples):
  
         try:
             g = Graph()
+
+            self.iface.messageBar().pushMessage(
+                "Info", "Saving file  at " + path,
+                    level=Qgis.Info, duration=100
+            )
             
             g.bind(self.dlg.linePrefix2.text(), mainNamespace)
         
@@ -657,18 +689,22 @@ class Layer2Triple:
                 QCoreApplication.processEvents()
                 i += 1
 
-            s = g.serialize(format="turtle")
 
-            f = open(path, "w+", encoding="utf-8")
-            
-            f.write(s)
-            f.close()
-            
-        
-            self.iface.messageBar().pushMessage(
-                "Success", "Output file written at " + path,
-                    level=Qgis.Success, duration=3
-            )
+
+
+    
+
+            QgsMessageLog.logMessage('Task to save ttl file', 'Layer2Triple')                                        
+            self.task = QgsTask.fromFunction('Saving TTL file...', 
+                    self.save_to_ttl, 
+                    path=path, g=g, 
+                    on_finished=partial(self.pos_save_to_ttl, path)) 
+    
+            QgsApplication.taskManager().addTask(self.task)
+
+  
+
+
         except Exception as e:
             pass
 
@@ -686,6 +722,8 @@ class Layer2Triple:
                   
             triples = self.create_rdf_triples(features, saveAttrs,mVocab)
             self.create_rdf_graph(mainNamespace, save_constants,mVocab, path , triples) 
+
+
 
         except Exception as e:
             self.iface.messageBar().pushMessage(
