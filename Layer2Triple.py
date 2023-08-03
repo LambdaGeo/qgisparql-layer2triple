@@ -292,7 +292,7 @@ class Layer2Triple:
             # Configura a tabela de atributos
             self.dlg.tableAttributes.setRowCount(len(self.class_concepts))
             self.dlg.tableAttributes.setColumnCount(3)
-            self.dlg.tableAttributes.setHorizontalHeaderLabels(["Concepts", "Type", "Value"])
+            self.dlg.tableAttributes.setHorizontalHeaderLabels(["Properties", "Type", "Value"])
 
             i = start
             for c in self.properties_concepts[start:]:

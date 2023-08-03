@@ -181,7 +181,7 @@
              </sizepolicy>
             </property>
             <property name="text">
-             <string>RDF Type</string>
+             <string>Class</string>
             </property>
            </widget>
           </item>
@@ -282,7 +282,7 @@
                 </sizepolicy>
                </property>
                <property name="text">
-                <string>RDF Type</string>
+                <string>Class</string>
                </property>
               </widget>
              </item>
