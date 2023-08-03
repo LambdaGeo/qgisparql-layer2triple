@@ -294,7 +294,6 @@ class Layer2Triple:
 
             i = start
             for c in self.concepts[start:]:
-                print(f"Debug: c = {c}, i = {i}")
                 self.dlg.tableAttributes.setCellWidget(i, 0, QCheckBox(c))
                 comboBox = QComboBox()
                 comboBox.textActivated.connect(partial(self.combo_changed, i))
@@ -448,7 +447,11 @@ class Layer2Triple:
         path =str(QFileDialog.getSaveFileName(caption="Defining output file", filter="JSON settings file(*.json)")[0])
         with open(path, "w") as file:
             # Grava o dicionário settings no arquivo JSON
-            settings = {"concepts":self.concepts, "namespaces": self.namespaces}
+            settings = {"concepts":self.concepts, "namespaces": self.namespaces,
+                        "tripleurl": self.dlg.lineURLBase.text(),
+                        "tripleprefix": self.dlg.linePrefix2.text(),
+                        "tripletype": self.dlg.comboRDFType.currentText(),
+                    }
             json.dump(settings, file)
             
                 
@@ -462,6 +465,10 @@ class Layer2Triple:
                 self.namespaces = {k:  Namespace(v) for k, v in  settings["namespaces"].items() } #incluir o namespace
                 self.concepts = settings["concepts"]
                 self.fill_table(0)
+
+                self.dlg.lineURLBase.setText(settings["tripleurl"])
+                self.dlg.linePrefix2.setText(settings["tripleprefix"])
+                self.dlg.comboRDFType.setCurrentText(settings["tripletype"])
                 
 
     def fill_table_from_task(self, exception, quant_concepts=None):
