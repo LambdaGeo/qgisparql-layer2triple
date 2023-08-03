@@ -125,7 +125,9 @@ class Layer2Triple:
         # Must be set in initGui() to survive plugin reloads
         self.first_start = None
 
-        self.concepts = []
+        #self.concepts = []
+        self.properties_concepts = []
+        self.class_concepts = []
         self.fields_name = []
 
         self.namespaces = {"geo": Namespace("http://www.opengis.net/ont/geosparql#")} # save os namespaces carregads
@@ -288,12 +290,12 @@ class Layer2Triple:
             self.dlg.search_bar.setPlaceholderText("Filtrar concepts...")
 
             # Configura a tabela de atributos
-            self.dlg.tableAttributes.setRowCount(len(self.concepts))
+            self.dlg.tableAttributes.setRowCount(len(self.class_concepts))
             self.dlg.tableAttributes.setColumnCount(3)
             self.dlg.tableAttributes.setHorizontalHeaderLabels(["Concepts", "Type", "Value"])
 
             i = start
-            for c in self.concepts[start:]:
+            for c in self.properties_concepts[start:]:
                 self.dlg.tableAttributes.setCellWidget(i, 0, QCheckBox(c))
                 comboBox = QComboBox()
                 comboBox.textActivated.connect(partial(self.combo_changed, i))
@@ -307,9 +309,12 @@ class Layer2Triple:
 
             self.dlg.search_bar.textChanged.connect(self.filter_table)
 
-            for c in self.concepts:
+            for c in self.class_concepts:
                 self.dlg.comboRDFType.addItem(c)
                 self.dlg.comboRDFType_2.addItem(c)
+        
+
+            for c in self.properties_concepts:
                 self.dlg.comboBoxPredicate.addItem(c)
 
 
@@ -327,6 +332,8 @@ class Layer2Triple:
       
             g = Graph()
             g.parse(url, format=format)
+   
+
             q = """
                 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
                 PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -334,10 +341,7 @@ class Layer2Triple:
                 SELECT ?p
                 WHERE 
                 {
-                    { ?p rdf:type owl:Class} UNION
-                { ?p rdf:type owl:DatatypeProperty} UNION
-                { ?p rdf:type owl:ObjectProperty} UNION
-                { ?p rdf:type rdf:Property}    
+                 ?p rdf:type owl:Class
                 }
             """
 
@@ -345,14 +349,32 @@ class Layer2Triple:
             for r in g.query(q):
                 attr = r["p"].split("#") 
                 name = prefix+":"+attr[1]
-                self.concepts.append(name)
+                self.class_concepts.append(name)
+
+            q = """
+                PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                PREFIX owl: <http://www.w3.org/2002/07/owl#>
+
+                SELECT ?p
+                WHERE 
+                {
+                { ?p rdf:type owl:DatatypeProperty} UNION
+                { ?p rdf:type owl:ObjectProperty}   
+                }
+            """
+
+            # Apply the query to the graph and iterate through results
+            for r in g.query(q):
+                attr = r["p"].split("#") 
+                name = prefix+":"+attr[1]
+                self.properties_concepts.append(name)
             
             if prefix not in self.namespaces:
                 self.namespaces[prefix] = Namespace(url)
 
             QgsMessageLog.logMessage('Vocabulary loaded', 'Triple2Layer')
             
-            return len(self.concepts)
+            return len(self.properties_concepts)
 
 
     def show_aggregated_group (self):
@@ -432,7 +454,7 @@ class Layer2Triple:
         if (s == "Layer Attribute"):
             self.dlg.tableAttributes.setCellWidget(row, 2, comboBox_by_itens(self.fields_name))
         elif (s == "Vocabulary"):
-            self.dlg.tableAttributes.setCellWidget(row, 2, comboBox_by_itens (self.concepts))
+            self.dlg.tableAttributes.setCellWidget(row, 2, comboBox_by_itens (self.class_concepts))
         else:
             self.dlg.tableAttributes.setCellWidget(row, 2, QLineEdit())
 
@@ -447,7 +469,12 @@ class Layer2Triple:
         path =str(QFileDialog.getSaveFileName(caption="Defining output file", filter="JSON settings file(*.json)")[0])
         with open(path, "w") as file:
             # Grava o dicionário settings no arquivo JSON
-            settings = {"concepts":self.concepts, "namespaces": self.namespaces,
+            settings = {
+                
+                        "class_concepts":self.class_concepts, 
+                        "properties_concepts":self.properties_concepts, 
+                        
+                        "namespaces": self.namespaces,
                         "tripleurl": self.dlg.lineURLBase.text(),
                         "tripleprefix": self.dlg.linePrefix2.text(),
                         "tripletype": self.dlg.comboRDFType.currentText(),
@@ -463,7 +490,9 @@ class Layer2Triple:
                 settings = json.loads(file.read())
                 # resume state        
                 self.namespaces = {k:  Namespace(v) for k, v in  settings["namespaces"].items() } #incluir o namespace
-                self.concepts = settings["concepts"]
+                self.class_concepts = settings["class_concepts"]
+                self.properties_concepts = settings["properties_concepts"]
+                
                 self.fill_table(0)
 
                 self.dlg.lineURLBase.setText(settings["tripleurl"])
@@ -608,7 +637,7 @@ class Layer2Triple:
 
     def pos_save_to_ttl (self,path, exception, result= None):
         self.iface.messageBar().clearWidgets()
-        
+
         if not exception:
 
             self.iface.messageBar().pushMessage(
