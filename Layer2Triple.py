@@ -290,7 +290,7 @@ class Layer2Triple:
             self.dlg.search_bar.setPlaceholderText("Filtrar concepts...")
 
             # Configura a tabela de atributos
-            self.dlg.tableAttributes.setRowCount(len(self.class_concepts))
+            self.dlg.tableAttributes.setRowCount(len(self.properties_concepts))
             self.dlg.tableAttributes.setColumnCount(3)
             self.dlg.tableAttributes.setHorizontalHeaderLabels(["Properties", "Type", "Value"])
 
@@ -329,10 +329,10 @@ class Layer2Triple:
 
     def load_vocabulary(self, task, prefix, url, format):
             QgsMessageLog.logMessage('the task is already running.', 'Layer2Triple')
-      
+               
             g = Graph()
             g.parse(url, format=format)
-   
+            print (g)
 
             q = """
                 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -347,8 +347,8 @@ class Layer2Triple:
 
             # Apply the query to the graph and iterate through results
             for r in g.query(q):
-                attr = r["p"].split("#") 
-                name = prefix+":"+attr[1]
+                attr = re.split(r'[#/]', r["p"])[-1]
+                name = prefix+":"+attr
                 self.class_concepts.append(name)
 
             q = """
@@ -365,8 +365,8 @@ class Layer2Triple:
 
             # Apply the query to the graph and iterate through results
             for r in g.query(q):
-                attr = r["p"].split("#") 
-                name = prefix+":"+attr[1]
+                attr = re.split(r'[#/]', r["p"])[-1]
+                name = prefix+":"+attr
                 self.properties_concepts.append(name)
             
             if prefix not in self.namespaces:
