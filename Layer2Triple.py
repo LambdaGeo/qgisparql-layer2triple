@@ -440,10 +440,10 @@ class Layer2Triple:
                 "Success", "Load Layer fields",
                 level=Qgis.Success, duration=3
             )
-        except:
+        except Exception as e:
             
             self.iface.messageBar().pushMessage(
-            "Error", "Erro on loading layer",
+            "Error", f"Erro {e} on loading layer",
             level=Qgis.Warning, duration=3)
 
 
@@ -471,39 +471,68 @@ class Layer2Triple:
 
 
     def save_setting(self):
-        path =str(QFileDialog.getSaveFileName(caption="Defining output file", filter="JSON settings file(*.json)")[0])
-        with open(path, "w") as file:
-            # Grava o dicionário settings no arquivo JSON
-            settings = {
-                
-                        "class_concepts":self.class_concepts, 
-                        "properties_concepts":self.properties_concepts, 
+        try:
+            path =str(QFileDialog.getSaveFileName(caption="Defining output file", filter="JSON settings file(*.json)")[0])
+            if path:
+                with open(path, "w") as file:
+                    # Grava o dicionário settings no arquivo JSON
+                    settings = {
                         
-                        "namespaces": self.namespaces,
-                        "tripleurl": self.dlg.lineURLBase.text(),
-                        "tripleprefix": self.dlg.linePrefix2.text(),
-                        "tripletype": self.dlg.comboRDFType.currentText(),
-                    }
-            json.dump(settings, file)
-            
+                                "class_concepts":self.class_concepts, 
+                                "properties_concepts":self.properties_concepts, 
+                                
+                                "namespaces": self.namespaces,
+                                "tripleurl": self.dlg.lineURLBase.text(),
+                                "tripleprefix": self.dlg.linePrefix2.text(),
+                                "tripletype": self.dlg.comboRDFType.currentText(),
+                            }
+                    json.dump(settings, file)
+                self.iface.messageBar().pushMessage(
+                "Success",
+                f"Configuration file saved... at {path}",
+                level=Qgis.Success,
+                duration=3)
+                    
+        except Exception as e:
+            print(f'erro save_setting{e}')    
+            self.iface.messageBar().pushMessage(
+                "Error to saving settings file",
+                f"{e}",
+                level=Qgis.Warning,
+                duration=3
+            )      
                 
     def open_setting(self):
-
+        try:
             path =str(QFileDialog.getOpenFileName(caption="Defining input file", filter="JSON settings file(*.json)")[0])
-            with open(path, "r") as file:
+            if path:
+                with open(path, "r") as file:
 
-                settings = json.loads(file.read())
-                # resume state        
-                self.namespaces = {k:  Namespace(v) for k, v in  settings["namespaces"].items() } #incluir o namespace
-                self.class_concepts = settings["class_concepts"]
-                self.properties_concepts = settings["properties_concepts"]
-                
-                self.fill_table(0)
+                    settings = json.loads(file.read())
+                    # resume state        
+                    self.namespaces = {k:  Namespace(v) for k, v in  settings["namespaces"].items() } #incluir o namespace
+                    self.class_concepts = settings["class_concepts"]
+                    self.properties_concepts = settings["properties_concepts"]
+                    
+                    self.fill_table(0)
 
-                self.dlg.lineURLBase.setText(settings["tripleurl"])
-                self.dlg.linePrefix2.setText(settings["tripleprefix"])
-                self.dlg.comboRDFType.setCurrentText(settings["tripletype"])
+                    self.dlg.lineURLBase.setText(settings["tripleurl"])
+                    self.dlg.linePrefix2.setText(settings["tripleprefix"])
+                    self.dlg.comboRDFType.setCurrentText(settings["tripletype"])
+                self.iface.messageBar().pushMessage(
+                "Success",
+                f"File read successfully...",
+                level=Qgis.Success,
+                duration=3)
                 
+        except Exception as e:
+            print(f'erro open_setting{e}')    
+            self.iface.messageBar().pushMessage(
+                "Erro on open settings file",
+                f"check {e} on file settings",
+                level=Qgis.Warning,
+                duration=3
+            )   
 
     def fill_table_from_task(self, exception, quant_concepts=None):
         if not exception:
@@ -740,7 +769,7 @@ class Layer2Triple:
   
 
 
-        except Exception as e:
+        except:
             pass
 
             
@@ -748,15 +777,15 @@ class Layer2Triple:
     def save_file(self):
         try:                                                                                       
             path = str(QFileDialog.getSaveFileName(caption="Defining output file", filter="Terse RDF Triple Language(*.ttl);;XML Files (*.xml)")[0])
-
-            mVocab, saveAttrs, save_constants = self.read_selected_attributes()
-            features = self.get_layer_features()  
-           
-            url_main = self.dlg.lineURLBase.text()
-            mainNamespace = Namespace(url_main)
-                  
-            triples = self.create_rdf_triples(features, saveAttrs,mVocab)
-            self.create_rdf_graph(mainNamespace, save_constants,mVocab, path , triples) 
+            if path:
+                mVocab, saveAttrs, save_constants = self.read_selected_attributes()
+                features = self.get_layer_features()  
+            
+                url_main = self.dlg.lineURLBase.text()
+                mainNamespace = Namespace(url_main)
+                    
+                triples = self.create_rdf_triples(features, saveAttrs,mVocab)
+                self.create_rdf_graph(mainNamespace, save_constants,mVocab, path , triples) 
 
 
 
