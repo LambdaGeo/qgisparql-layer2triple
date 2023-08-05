@@ -359,7 +359,8 @@ class Layer2Triple:
                 WHERE 
                 {
                 { ?p rdf:type owl:DatatypeProperty} UNION
-                { ?p rdf:type owl:ObjectProperty}   
+                { ?p rdf:type owl:ObjectProperty} UNION
+                { ?p rdf:type rdf:Property}  
                 }
             """
 
@@ -404,6 +405,10 @@ class Layer2Triple:
         prefix = self.vocab_dlg.linePrefix.text()
 
         #"http://purl.org/linked-data/sdmx/2009/dimension#""
+
+        self.iface.messageBar().pushMessage(
+            "Info", "Loading vocabulary",
+            level=Qgis.Info, duration=3)
 
         QgsMessageLog.logMessage('Task to loading vocabulary', 'Layer2Triple')                                        
         self.task = QgsTask.fromFunction('Loading vocabulary...', 
@@ -503,15 +508,16 @@ class Layer2Triple:
     def fill_table_from_task(self, exception, quant_concepts=None):
         if not exception:
             self.fill_table(0)       
+            self.iface.messageBar().clearWidgets()
             self.iface.messageBar().pushMessage(
                 "Success",
-                f"Configuration uploaded successfully...{quant_concepts} concepts loaded,{exception} mistakes",
+                f"Configuration uploaded successfully...{quant_concepts} concepts loaded",
                 level=Qgis.Success,
                 duration=3
             )
         else:
            self.iface.messageBar().pushMessage(
-                "Erro on load Vocabulario",
+                "Erro on load Vocabulary",
                 f"{exception}",
                 level=Qgis.Warning,
                 duration=3
