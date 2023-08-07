@@ -78,45 +78,35 @@ Para utilizarmos o **Layer2Triple** primeiramente vamos carregar uma camada veto
 
 Figura 3- Abrir projeto QGIS
 
-- guardando
-    
-    Podemos assim, selecionar o projeto do QGIS que tenham camadas vetoriais como mostrado na Figura 3.
-    
-    QGIS reconhece camadas vetoriais e matriciais <bla bla bla>
-    
-    ![Figura 3-escolha do projeto QGIS](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/26c3bb03-4f1f-495c-b00e-d15379472935/Untitled.png)
-    
-    Figura 3-escolha do projeto QGIS
-    
-    Ao ser carregado o projeto podemos ver a o dado gerado de maneira gráfica como mostrado na figura 4.  Nela temos a parte de camadas carregadas no painel "Camadas" do QGIS, as quais podemos selecionar para utilizarmos dentro do Plugin Layer2triple.
-    
+Podemos assim, selecionar o projeto do QGIS que tenham camadas vetoriais como mostrado na Figura 4.
 
- Com um mapa com camadas vetoriais carregado podemos começar a utilizar o plugin layer2triple.
+QGIS reconhece camadas vetoriais e matriciais.
 
-![Figura 4-Camadas carregadas](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/8755d002-d568-49d7-8d8d-68ad7f5b1f07/Untitled.png)
+![Figura 4-escolha do projeto QGIS](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/26c3bb03-4f1f-495c-b00e-d15379472935/Untitled.png)
 
-Figura 4-Camadas carregadas
+Figura 4-escolha do projeto QGIS
+
+Ao ser carregado o projeto podemos ver a o dado gerado de maneira gráfica como mostrado na figura 5.  Nela temos a parte de camadas carregadas no painel "Camadas" do QGIS, as quais podemos selecionar para utilizarmos dentro do Plugin Layer2triple.
+
+Com um mapa, que é formado por camadas vetoriais carregado, podemos começar a utilizar o plugin layer2triple.
+
+![Figura 5-Camadas carregadas](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/8755d002-d568-49d7-8d8d-68ad7f5b1f07/Untitled.png)
+
+Figura 5-Camadas carregadas
 
 Depois de selecionar a camada vetorial a ser utilizada, basta abrir na barra de menu e passando o mouse por cima de “vetor”, será possível acessar em célula QGISPARQL os plugins da **DBCells**. 
 
-<aqui será necessário falar mais a respeito de camadas vetoriais>
+Na imagem a seguir podemos então abrir o plugin **Layer2triple** indo em vetor na barra de menu como mostrado na seta de número 1, e selecionar a o plugin que queremos, no caso o **Layer2triple** mostrado na seta de número 2 na figura 6.
 
-Na imagem a seguir podemos então abrir o plugin **Layer2triple** indo em vetor na barra de menu como mostrado na seta de número 1, e selecionar a o plugin que queremos, no caso o **Layer2triple** mostrado na seta de número 2 na figura 5.
+![Figura 6- abrir a interface do Layer2triple ](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/d92df568-eac2-43f8-8bac-0395ac1632bd/Untitled.png)
 
-![Figura 5- abrir a interface do Layer2triple ](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/d92df568-eac2-43f8-8bac-0395ac1632bd/Untitled.png)
+Figura 6- abrir a interface do Layer2triple 
 
-Figura 5- abrir a interface do Layer2triple 
+A Figura 7 é possivel ver o plugin aberto com as camadas carregadas, prontas para serem manipuladas dentro do Layer2triple.
 
-A Figura 6 a seguir mostra o Plugin aberto com as camadas carregadas, prontas para serem manipuladas dentro do Layer2triple
-
-![Figura 7- layer carregado dentro do plugin ](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/379acf04-cee1-4298-b5b9-4415190829da/Untitled.png)
+![Figura 7- layer carregado dentro do plugin ](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/a4640a6a-f76b-433a-9b22-b7cb24f0d768/Untitled.png)
 
 Figura 7- layer carregado dentro do plugin 
-
-Na figura 8 podemos ver as camadas geográficas carregadas
-
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/60f26336-2289-4da7-98fe-e1eeaae283d2/Untitled.png)
-
 
 ## Passo 2: Load vocabulary
 
@@ -124,37 +114,49 @@ O Plugin Layer2Triple permite carregar vocabulários personalizados para mapear 
 
 Com a camada geográfica aberta podemos então carregar o vocabulário que queremos exportar.
 
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/0b0ad576-38ca-44e2-9335-b15261bd6189/Untitled.png)
+![Figura 8- Plugin com layer carregado](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/0b0ad576-38ca-44e2-9335-b15261bd6189/Untitled.png)
 
-Para isso vamos acessar abrir a caixa de dialogo indo em **Vocabulary>Load Vocabulary** onde faremos o carregamento do vocabulário desejado como mostrado na Figura X.  Clique no botão "Carregar Vocabulário". Será exibida a janela "Carregar Vocabulário"
+Figura 8- Plugin com layer carregado
 
-![Figura 6- layer carregado dentro do plugin ](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/d83e0e58-46d6-432d-a8bc-c7e60efe36cb/Untitled.png)
+Para isso vamos abrir a caixa de dialogo indo em **Vocabulary>Load Vocabulary** onde faremos o carregamento do vocabulário desejado como mostrado na Figura 9.  Clique no botão "Carregar Vocabulário". Será exibida a janela "Carregar Vocabulário"
 
-Figura 6- layer carregado dentro do plugin 
+![Figura 9- layer carregado dentro do plugin ](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/d83e0e58-46d6-432d-a8bc-c7e60efe36cb/Untitled.png)
 
-Preencha as informações do vocabulário, incluindo o formato (por exemplo, TTL) e a URL do namespace. Clique em "OK" para carregar o vocabulário
+Figura 9- layer carregado dentro do plugin 
 
-![Figura X-Load Vocabulary](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/97f5ebf2-cae1-4839-a32a-374e7acd0ff2/Untitled.png)
+Preencha as informações do vocabulário, incluindo o formato (por exemplo, TTL) e a URL do namespace. Clique em "OK" para carregar o vocabulário.
 
-Figura X-Load Vocabulary
+![Figura 10-Load Vocabulary](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/97f5ebf2-cae1-4839-a32a-374e7acd0ff2/Untitled.png)
 
-Ao abrirmos essa caixa de dialogo podemos colocar as informações de prefixo, URL e formato que pode ser turtle(.ttl) ou Extensible Markup Language(.xml) como podemos ver na Figura X.
+Figura 10-Load Vocabulary
 
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/cf89d431-dc72-4f7d-9be0-a96c1305deba/Untitled.png)
+Ao abrirmos essa caixa de dialogo podemos colocar as informações de prefixo, URL e formato que pode ser turtle(.ttl) ou Extensible Markup Language(.xml) como podemos ver na Figura 11.
 
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/bc5dffd0-1410-4239-8f1a-f74d1251ada6/Untitled.png)
+![Figura 11- Inserindo vocabulário](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/cf89d431-dc72-4f7d-9be0-a96c1305deba/Untitled.png)
 
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/93f32ec8-c68a-4b98-8308-c3ed0b6634a7/Untitled.png)
+Figura 11- Inserindo vocabulário
 
-<aqui falar sobre a figura 8 e sobre o carregamento do atributo “cell” que acrregarar ao fazer p “load layer”>
+Dessa forma, os atributos serão carregados na tabela de atributos como podemos ver na Figura 12 e uma mensagem de sucesso caso todos atributos sejam carregados.
 
-![Figura 9- carregamento do layer para manipulação no plugin ](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/1acb57fb-d04f-4bad-9605-870cf7cb03e6/Untitled.png)
+![Figura 12- Carregando vocabulário](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/bc5dffd0-1410-4239-8f1a-f74d1251ada6/Untitled.png)
 
-Figura 9- carregamento do layer para manipulação no plugin 
+Figura 12- Carregando vocabulário
 
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/7417bbfe-d06b-459d-9fe6-6ba70dac5455/Untitled.png)
+Assim, depois que os atributos forem carregados, apertando em “Load layer” como podemos ver na Figura 13 podemos fazer o carregamento da camada que foi aberta onde automaticamente carregará os atributos.
 
-Mapeamento dos Atributos
+![Figura 13- carregamento do layer para manipulação no plugin ](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/1acb57fb-d04f-4bad-9605-870cf7cb03e6/Untitled.png)
+
+Figura 13- carregamento do layer para manipulação no plugin 
+
+Para podermos ter certeza que esse processo foi concluído com sucesso ao efetuar o carregamento iremos receber uma mensagem de sucesso como mostrado na Figura 14. 
+
+![Figura 14- Sucesso no carregamento do layer](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/7417bbfe-d06b-459d-9fe6-6ba70dac5455/Untitled.png)
+
+Figura 14- Sucesso no carregamento do layer
+
+Agora sim podemos partir para o Mapeamento dos atributos!! Vamos imediatamente!!
+
+# Mapeamento dos atributos
 
 Após configurar as opções iniciais e carregar os vocabulários, é necessário mapear os atributos da camada vetorial em triplas RDF. Na tabela "Atributos" na janela principal do Plugin Layer2Triple, você encontrará uma lista de conceitos disponíveis. Para mapear um atributo, siga as etapas abaixo:
 
@@ -165,54 +167,71 @@ Após configurar as opções iniciais e carregar os vocabulários, é necessári
 3. "Vocabulário": Selecione um conceito do vocabulário carregado.
 - Preencha o valor correspondente ao mapeamento selecionado.
 
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/9dfa557f-f629-482c-8915-8afe27855bc5/Untitled.png)
+Para facilitar o processo, caso seja uma quantidade muito grande podemos usar a filtragem para acharmos mais rapidamente o atributo desejado como mostrado na Figura 15.
+
+![Figura 15- mostrando uso da filtragem para seleção de conceitos](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/9dfa557f-f629-482c-8915-8afe27855bc5/Untitled.png)
+
+Figura 15- mostrando uso da filtragem para seleção de conceitos
 
 Repita essas etapas para mapear todos os atributos desejados.
 
-## Passo 3: Settings 🛠️ 
-### Abrir configurações
+## Passo 3: Settings 🛠️
+
+Nessa seção de configurações, podemos ver no decorrer desse tutorial, como abrir configurações ja salvas e como salvar configurações.
+
+# Abrir configurações
+
+- nao incluir essa parte aqui, talvez no relatório
+    
+    no exemplo que mostraremos temos um arquivo de configuração do tipo JSON onde contem informações necessárias para formar uma tabela de atributos. [](http://atributos.ne)Nela contem dados necessários para o software trabalhar com vocabularios RDF (Resource Description Framework)
+    
+    Primeiramente em sua estrutura teremos a chave, “TRIPLEPREFIX”, por exemplo que pode conter o valor “obs”, como mostrado no código a seguir. Isso indica que “obs” é um prefixo utilizado para identificar termos de vocabulários relacionado a observações. podemos tambem ter uma chave que contenha URLS para identificar termos especificos. já o valor “qb:Observation” , onde “qb” identifica vocabularios relacionados ao Datacube vocabulary, e observation é uma observação especifica dentro desse vocabulario.
+    
+    ```markup
+    {"TRIPLEPREFIX": "obs", "TRIPLEURL": "https://purl.org/dbcells/observation#", "TRIPLETYPE": "qb:Observation"
+    ```
+    
+
 Antes de fazermos as conversões da camada vetorial em triplas RDF, faz-se 
 
-- Depois pode explicar que os vocabularios e algumas daqueles podem ser salvas e carregadas, sem detalhar nada do formato do arquivo, apenas do ponto de vista do usuario
-    
-    
-    aqui é temos a parte de configurações iniciais que precisamos como mostrado na Figura 9 indo em “**Settings**” e depois em “**Open**”  para carregarmos a tabela de atributos.                       
-    
-    ![Figura 8-carregamento das configurações da tabela de atributos](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/dbffbd77-e232-41b6-9cef-39930455319d/Untitled.png)
-    
-    Figura 8-carregamento das configurações da tabela de atributos
-    
-    <explicar sobre o arquivo de configuração>
-    
-    ![Figura 9- arquivo de configurações para tabela de atributos](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/91ea596a-a483-4860-b880-a1e2ed09d738/Untitled.png)
-    
-    Figura 9- arquivo de configurações para tabela de atributos
-    
-    o arquivo JSON “configura”, onde foi salvo todos os vocabulários necessários para gerar os dados
-    
-    <descrever aqui as configurações Iniciais necessarias>
-    
-    Antes de converter a camada vetorial em triplas RDF, é necessário configurar algumas opções iniciais. Na janela principal do Plugin Layer2Triple, você encontrará as seguintes configurações:
-    URL Base: Insira a URL base para a geração das URIs das triplas RDF.
-    Prefixo: Insira o prefixo a ser utilizado nas URIs das triplas RDF.
-    Tipo RDF: Selecione o tipo RDF para as observações (por exemplo, qb:Observation).
-    
+Aqui nessa seção podemos abrir configurações iniciais que já temos salvas em nosso computador  como mostrado na Figura 16. Para essa tarefa basta clicar em “**Settings**”, como mostrado na seta de numero 1, e depois em “**Open**”  para carregarmos tais configurações para tabela de atributos.                  
 
-Com o plugin aberto, inicialmente podemos fazer o carregamento do layer, que contém os vocabulários (Arquivo JSON):
+     
 
- 
+![Figura 16-abrir configurações](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/47496012-bf34-4075-a4d5-bd4c153d7a98/Untitled.png)
 
-![Screenshot_116.png](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/a2d3fd24-f47c-445f-84a4-961cc343222d/Screenshot_116.png)
+Figura 16-abrir configurações
 
-### Salvando configurações
-aqui a parte de save_setting
+Inicialmente podemos fazer o carregamento do layer, que contém os vocabulários (Arquivo JSON) como mostrado na seta de numero 1 na Figura 17.
+
+![Figura 17- arquivo de configurações para tabela de atributos](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/91ea596a-a483-4860-b880-a1e2ed09d738/Untitled.png)
+
+Figura 17- arquivo de configurações para tabela de atributos
+
+o arquivo JSON “configura”, contém salvo todos os vocabulários necessários para gerar os dados
+
+Antes de converter a camada vetorial em triplas RDF, é necessário configurar algumas opções iniciais. Na janela principal do Plugin Layer2Triple, você encontrará as seguintes configurações:
+URL Base: Insira a URL base para a geração das URIs das triplas RDF.
+Prefixo: Insira o prefixo a ser utilizado nas URIs das triplas RDF.
+Tipo RDF: Selecione o tipo RDF para as observações (por exemplo, qb:Observation).
+
+![Figura 18-configurações optativas](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/de922272-bdc9-4989-8868-e3f781430325/Untitled.png)
+
+Figura 18-configurações optativas
+
+# Salvando configurações
+
+E caso você queira salvar uma configurações vocabulários para geração de dados em sua máquina basta usar a funcionalidade de salvar configurações do plugin disponivel dentro de “**Settings**”, como mostrado na seta de numero 1 como mostrado na Figura 19, e depois em “********Save********”  para escolher uma pasta em que deseja salvar tais configurações.   
+
+![Figura 19- Salvar configurações](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/2562fc39-63b3-4e62-9448-2162d2f6f3d6/Untitled.png)
+
+Figura 19- Salvar configurações
 
 ## Passo 4: Fazendo exportação de dados
 
+# Exportando…
 
-
-### Exportando…
-Para a exportação das observações, e inserção dos dados da base de dados, foi utilizado o Plugin, do QGIS, Layer2Triple, que basicamente permite a criação de arquivos RDF no formato Turtle (.ttl).
+Neste tutorial para a exportação das observações, e inserção dos dados da base de dados, foi utilizado o Plugin, do QGIS, Layer2Triple, que permite a criação de arquivos RDF no formato Turtle (.ttl).
 
 Com o uso da linguagem de triplas RDF, é feita a conversão de camadas vetoriais nessa mesma linguagem, na qual é transformada  para o formato Terse Triple Language.
 
@@ -222,15 +241,15 @@ Nesse plugin, é possível exportar dados RDF, a partir de camadas vetoriais que
 
 Após o carregamento dos vocabulários, é feita a modelagem das informações. Inicialmente é selecionado o tipo observação (RDF type), e estabelecido o prefixo “obs”, seguida da url base. 
 
-Em seguida, é selecionado “dbc:measure:mean” que representa a medida estatística, média, é selecionado “Layer attribute” pois o valor vem do atributo, e selecionado “mean_past”, que, no caso, é a informação a ser exportada:
+Para seleção de conceitos selecionaremos uma medida estatística de media de pastagem. Então “dbc:measure:mean” representa a medida do tipo média e selecionaremos “Layer attribute” pois o valor “mean_past”, que é a media de pastagem, é um valor que advém do atributo.
 
-![Figura 11- Selecionando dados estatísticos de média de pastagem](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/791043e2-8017-45db-ba02-90982a0a66b1/Screenshot_117.png)
+Pronto, com isso conseguimos selecionar uma informação a ser exportada como mostrado na Figura 20.
 
-Figura 11- Selecionando dados estatísticos de média de pastagem
+![Figura 20- Selecionando dados estatísticos de média de pastagem](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/791043e2-8017-45db-ba02-90982a0a66b1/Screenshot_117.png)
 
-<la  no tcc eu fiz uma figura, talvez ajude a explicar isso aqui>
+Figura 20- Selecionando dados estatísticos de média de pastagem
 
-Para fazer a agregação de constantes, precisa-se de um link, selecionando “qb:DataSet” em predicate, e essas informações irão ficar linkadas na classe “qb:DataSet”, selecionada no RDF Type, com um prefixo, e uma URL semelhante a URL base anterior.
+Para fazer a agregação de constantes, precisa-se de um link, selecionando “qb:DataSet” em predicate, e essas informações irão ficar interligadas na classe “qb:DataSet”, selecionada no RDF Type, com um prefixo, e uma URL semelhante a URL base anterior.
 
 ![Figura 12- agregações de constantes](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/2179f56c-222b-4e16-a930-8a97b21206eb/Screenshot_119.png)
 
@@ -242,7 +261,7 @@ Em seguida, é selecionado atributo de valor constante referente ao período, sd
 
 Figura 13-selecionando período e área 
 
-Após isso, é selecionado o vocabulário relacionado a medida em questão, que especifíca o tipo de característica (feature) do conjunto de dados, no caso, dbc-code:landcover-pastp. Em seguida, também seleciona-se o atributo relacionado ao script .lua relacionado a esse conjunto de dados, dbc-attribute:scriptFile, e o atributo que especifica o local onde o arquivo de origem do conjunto de dados está localizado, dbc-attribute:sourceFile, que nesse caso refere-se a um arquivo TIF:
+Após isso, é selecionado o vocabulário relacionado a medida em questão, que especifica o tipo de característica (feature) do conjunto de dados, no caso, dbc-code:landcover-pastp. Em seguida, também seleciona-se o atributo relacionado ao script .lua relacionado a esse conjunto de dados, dbc-attribute:scriptFile, e o atributo que especifica o local onde o arquivo de origem do conjunto de dados está localizado, dbc-attribute:sourceFile, que nesse caso refere-se a um arquivo TIF:
 
 ![Figura 14- adição das URLs ](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/64766ac7-b1d5-48e7-9b7e-2ecac4df849b/Screenshot_121.png)
 
@@ -353,9 +372,3 @@ ds:f77ce462-8b99-48b8-b628-cc9d6d6c6c5a a qb:dataSet ;
     dbc-attribute:sourceFile "<https://github.com/LambdaGeo/brlucc-database/blob/main/data/tif/2010/brasil2010pastp1.tif>" ;
     sdmx-dimension:refPeriod 2010 .
 ```
-
-### Selecionando conceitos
-
-### Selecionado tipos de constantes
-
-### Definindo valores
