@@ -181,17 +181,6 @@ Nessa seção de configurações, podemos ver no decorrer desse tutorial, como a
 
 # Abrir configurações
 
-- nao incluir essa parte aqui, talvez no relatório
-    
-    no exemplo que mostraremos temos um arquivo de configuração do tipo JSON onde contem informações necessárias para formar uma tabela de atributos. [](http://atributos.ne)Nela contem dados necessários para o software trabalhar com vocabularios RDF (Resource Description Framework)
-    
-    Primeiramente em sua estrutura teremos a chave, “TRIPLEPREFIX”, por exemplo que pode conter o valor “obs”, como mostrado no código a seguir. Isso indica que “obs” é um prefixo utilizado para identificar termos de vocabulários relacionado a observações. podemos tambem ter uma chave que contenha URLS para identificar termos especificos. já o valor “qb:Observation” , onde “qb” identifica vocabularios relacionados ao Datacube vocabulary, e observation é uma observação especifica dentro desse vocabulario.
-    
-    ```markup
-    {"TRIPLEPREFIX": "obs", "TRIPLEURL": "https://purl.org/dbcells/observation#", "TRIPLETYPE": "qb:Observation"
-    ```
-    
-
 Antes de fazermos as conversões da camada vetorial em triplas RDF, faz-se 
 
 Aqui nessa seção podemos abrir configurações iniciais que já temos salvas em nosso computador  como mostrado na Figura 16. Para essa tarefa basta clicar em “**Settings**”, como mostrado na seta de numero 1, e depois em “**Open**”  para carregarmos tais configurações para tabela de atributos.                  
@@ -251,21 +240,21 @@ Figura 20- Selecionando dados estatísticos de média de pastagem
 
 Para fazer a agregação de constantes, precisa-se de um link, selecionando “qb:DataSet” em predicate, e essas informações irão ficar interligadas na classe “qb:DataSet”, selecionada no RDF Type, com um prefixo, e uma URL semelhante a URL base anterior.
 
-![Figura 12- agregações de constantes](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/2179f56c-222b-4e16-a930-8a97b21206eb/Screenshot_119.png)
+![Figura 21- agregações de constantes](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/2179f56c-222b-4e16-a930-8a97b21206eb/Screenshot_119.png)
 
-Figura 12- agregações de constantes
+Figura 21- agregações de constantes
 
 Em seguida, é selecionado atributo de valor constante referente ao período, sdmx-dimension:refPeriod, e a área
 
-![Figura 13-selecionando período e área ](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/90d98121-34c2-4877-9342-449c2d20665b/Screenshot_120.png)
+![Figura 22-selecionando período e área ](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/90d98121-34c2-4877-9342-449c2d20665b/Screenshot_120.png)
 
-Figura 13-selecionando período e área 
+Figura 22-selecionando período e área 
 
 Após isso, é selecionado o vocabulário relacionado a medida em questão, que especifica o tipo de característica (feature) do conjunto de dados, no caso, dbc-code:landcover-pastp. Em seguida, também seleciona-se o atributo relacionado ao script .lua relacionado a esse conjunto de dados, dbc-attribute:scriptFile, e o atributo que especifica o local onde o arquivo de origem do conjunto de dados está localizado, dbc-attribute:sourceFile, que nesse caso refere-se a um arquivo TIF:
 
-![Figura 14- adição das URLs ](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/64766ac7-b1d5-48e7-9b7e-2ecac4df849b/Screenshot_121.png)
+![Figura 23- adição das URLs ](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/64766ac7-b1d5-48e7-9b7e-2ecac4df849b/Screenshot_121.png)
 
-Figura 14- adição das URLs 
+Figura 23- adição das URLs 
 
 Vale ressaltar que ambos os atributos File, encontram-se no repositório referente a base de dados, LambdaGeo/brlucc-database.
 
