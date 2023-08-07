@@ -42,13 +42,13 @@ Para utilizarmos precisamos ter o Plugin instalado.
 
 Para fazer a instalação dos complementos basta seguirmos os passos descritos na pagina a seguir
 
-[Instalação dos complementos (2)](https://www.notion.so/Instala-o-dos-complementos-2-6e4865644d854bdcbb190e59e631196f?pvs=21)
+[Instalação dos complementos](https://github.com/LambdaGeo/qgisparql-layer2triple/blob/documentation/instalando%20complementos.md)
 
 # Preparação do ambiente
 
 Para rodar os Plugins dentro do ********QGIS********  precisamos preparar o ambiente. Para isso basta seguirmos os passos descritos na pagina a seguir 
 
-[Preparação de ambiente (2)](https://www.notion.so/Prepara-o-de-ambiente-2-3aa25837e201446b8f86bd4da0969202?pvs=21)
+[Preparação de ambiente](https://github.com/LambdaGeo/qgisparql-layer2triple/blob/documentation/preparando%20o%20ambiente.md)
 
 
 ---
@@ -115,9 +115,7 @@ Com a camada geográfica aberta podemos então carregar o vocabulário que quere
 Figura 8- Plugin com layer carregado
 
 Para isso vamos abrir a caixa de dialogo indo em **Vocabulary>Load Vocabulary** onde faremos o carregamento do vocabulário desejado como mostrado na Figura 9.  Clique no botão "Carregar Vocabulário". Será exibida a janela "Carregar Vocabulário"
-![image](https://github.com/LambdaGeo/qgisparql-layer2triple/assets/108685222/0a26549a-5af6-4179-989b-32b93d2fc208)
-
-![Figura 9- layer carregado dentro do plugin ](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/d83e0e58-46d6-432d-a8bc-c7e60efe36cb/Untitled.png)
+![Figura 9- layer carregado dentro do plugin](https://github.com/LambdaGeo/qgisparql-layer2triple/assets/108685222/0a26549a-5af6-4179-989b-32b93d2fc208)
 
 Figura 9- layer carregado dentro do plugin 
 
