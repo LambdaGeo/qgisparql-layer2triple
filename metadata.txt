@@ -10,10 +10,12 @@ version=0.1
 author=Sergio Costa
 email=sergio.costa@ufma.br
 
+maintener=Nerval Junior 
+
 about=Provide a brief description of the plugin and its purpose.
 
-tracker=http://bugs
-repository=http://repo
+tracker=https://github.com/LambdaGeo/qgisparql-layer2triple/issues
+repository=https://github.com/LambdaGeo/qgisparql-layer2triple
 # End of mandatory metadata
 
 # Recommended items:
@@ -23,13 +25,13 @@ hasProcessingProvider=no
 # changelog=
 
 # Tags are comma separated with spaces allowed
-tags=python
+tags=python, wkt,ttl, rdf, linked data
 
 homepage=http://homepage
 category=Plugins
 icon=icon.png
 # experimental flag
-experimental=False
+experimental=True
 
 # deprecated flag (applies to the whole plugin, not just a single version)
 deprecated=False
@@ -40,7 +42,7 @@ deprecated=False
 # plugin_dependencies=
 
 Category of the plugin: Raster, Vector, Database or Web
-# category=
+category=Vector
 
 # If the plugin can run on QGIS Server.
 server=False
