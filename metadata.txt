@@ -27,8 +27,7 @@ hasProcessingProvider=no
 # Tags are comma separated with spaces allowed
 tags=python, wkt,ttl, rdf, linked data
 
-homepage=http://homepage
-category=Plugins
+homepage=https://lambdageo.github.io/qgisparql-layer2triple
 icon=icon.png
 # experimental flag
 experimental=True
