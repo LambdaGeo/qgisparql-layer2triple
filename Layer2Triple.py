@@ -364,6 +364,8 @@ class Layer2Triple:
                 }
             """
 
+            namespace_url = self.vocab_dlg.lineNamespace.text() # depois remover essa abordagem
+
             # Apply the query to the graph and iterate through results
             for r in g.query(q):
                 attr = re.split(r'[#/]', r["p"])[-1]
@@ -371,7 +373,8 @@ class Layer2Triple:
                 self.properties_concepts.append(name)
             
             if prefix not in self.namespaces:
-                self.namespaces[prefix] = Namespace(url)
+                #self.namespaces[prefix] = Namespace(url)
+                self.namespaces[prefix] = Namespace(namespace_url)
 
             QgsMessageLog.logMessage('Vocabulary loaded', 'Triple2Layer')
             
