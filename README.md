@@ -1,12 +1,12 @@
 # QGISSPARQL:Layer2Triple
 
-# Visão geral
+# Overview
 
-**Repositório**: https://github.com/LambdaGeo/qgisparql-Layer2Triple/
+**Repository**: https://github.com/LambdaGeo/qgisparql-Layer2Triple/
 
-**Criadores**: [Sérgio Souza Costa](https://github.com/profsergiocosta) e  [Nerval Junior](https://github.com/nervaljunior)
+**Creators**: [Sérgio Souza Costa](https://github.com/profsergiocosta) and [Nerval Junior](https://github.com/nervaljunior)
 
-### Este plugin visa exportar os dados de uma camada de dado geográfico no sistema de informação geográfica QGIS (https://qgis.org/).
+### This plugin aims to export data from a layer of geographic information in the QGIS geographic information system (https://qgis.org/).
 
 <table align="right">
   <tr>
@@ -35,227 +35,236 @@
 
 ---
 
-O Plugin Layer2triple é um complemento do QGIS que permite a criação de arquivos RDF (Resource Description Framework) no formato Turtle (.ttl). Para isso é feito a conversão de camadas vetoriais em uma linguagem de triplas RDF para o formato Terse Triple Language. Ele abre uma janela de diálogo com uma tabela na qual o usuário pode selecionar atributos de uma camada vetorial e definir o valor RDF correspondente. Assim, o usuário pode selecionar quais atributos deseja incluir no arquivo RDF.  O usuário pode salvar o arquivo e fornecer uma URL para os recursos RDF. 
+The Layer2triple Plugin is an extension for QGIS that allows the creation of RDF (Resource Description Framework) files in Turtle (.ttl) format. This involves converting vector layers into an RDF triple language in the Terse Triple Language format. It opens a dialog window with a table where the user can select attributes from a vector layer and define the corresponding RDF value. This way, the user can choose which attributes to include in the RDF file. The user can save the file and provide a URL for the RDF resources.
 
-O Plugin tem como objetivo exportar dados em formato RDF (Resource Description Framework) a partir de uma camada de dados vetoriais (camada que representa dados geográficos como pontos, linhas ou polígonos) e possibilitar a criação de ontologias que são modelos conceituais de domínios específicos. 
+The Plugin aims to export data in RDF (Resource Description Framework) format from a vector data layer (a layer that represents geographic data such as points, lines, or polygons) and enable the creation of ontologies, which are conceptual models of specific domains.
 
-A seguir na figura 1 podemos ver a interface gr**á**fica principal do plugin ******Layer2triple******
+In Figure 1 below, you can see the main graphical interface of the **Layer2triple** plugin:
 
 ![Figura 1- Interface Inicial do Plugin Layer2triple](https://github.com/LambdaGeo/qgisparql-layer2triple/assets/108685222/231f97b8-c03f-410c-a078-d673b40e3394)
 
-Figura 1- Interface Inicial do Plugin Layer2triple
+**Figure 1 - Initial Interface of Layer2triple Plugin**
 
-Na interface gráfica do plugin **Layer2triple ,**que é ****possível ver na Figura 2, conseguimos visualizar na parte superior informações sobre o layer que foi carregado, a URL base, o tipo do RDF ,o prefixo, uma subseção de agregações de constantes, e uma área para escolhermos as opções de configurações e vocabulário. Já na segunda parte, temos a tabela de atributo, onde serão carregados os atributos necessários para a exportação. Além disso, temos uma seção para agregações de constantes que mostraremos no decorrer desse conteúdo. Nessa interface encontramos também o botão para salvar as exportações. Ao seu lado, está o botão “cancelar”, cuja finalidade é fazer o cancelamento de toda execução como também fechar a interface gráfica.
+In the graphical interface of the **Layer2triple** plugin, as shown in Figure 2, you can find information about the loaded layer at the top, including the base URL, RDF type, prefix, a subsection of constant aggregations, and an area to choose configuration options and vocabulary. In the second part, there is an attribute table where the necessary attributes for export will be loaded. Additionally, there is a section for constant aggregations, which will be explained later in this content. In this interface, you will also find the button to save exports. Next to it is the "Cancel" button, which is used to cancel the entire execution and close the graphical interface.
 
 ![Figura 2- Subdivisão do plugin Layer2triple](https://github.com/LambdaGeo/qgisparql-layer2triple/assets/108685222/b4a9d031-fbf3-4581-8389-af8594b1f36a)
 
-Figura 2- Subdivisão do plugin Layer2triple
+**Figure 2 - Subdivision of Layer2triple Plugin**
 
-## Instalação dos Plugins
+## Plugin Installation
 
-Para utilizarmos precisamos ter o Plugin instalado. 
+To use this tool, it needs to be installed.
 
-Para fazer a instalação dos complementos basta seguirmos os passos descritos na pagina a seguir
-
+To install the plugin, follow the steps described on the following page: 
 [Instalação dos complementos](https://github.com/LambdaGeo/qgisparql-layer2triple/blob/documentation/instalando%20complementos.md)
 
-# Preparação do ambiente
+# Environment Setup
 
-Para rodar os Plugins dentro do ********QGIS********  precisamos preparar o ambiente. Para isso basta seguirmos os passos descritos na pagina a seguir 
-
+To run the plugins within **QGIS**, it is necessary to prepare the environment. Follow the steps described on the following page: 
 [Preparação de ambiente](https://github.com/LambdaGeo/qgisparql-layer2triple/blob/documentation/preparando%20o%20ambiente.md)
 
 
 ---
 
-## Como utilizar 
+## How to Use
+
+> `💡 Screenshots for this documentation were taken in QGIS 3.26.3 running on Windows. Depending on your setup, the screens you encounter may look slightly different. However, all the same buttons will still be available, and the instructions will work on any operating system. You will need QGIS 3.4 (the latest version at the time of writing) to use this tutorial.`
+
+> `💡 Before starting this exercise, the **Layer2Triple** plugin must be installed on your computer.`
 
 
-> `💡 As capturas de tela para esta documentação foram tiradas no QGIS 3.26.3 em execução no Windows. Dependendo da sua configuração, as telas que você encontra podem parecer um pouco diferentes. No entanto, todos os mesmos botões ainda estarão disponíveis e as instruções funcionarão em qualquer sistema operacional. Você precisará do QGIS 3.4 (a versão mais recente no momento de redação) para usar este curso.`
+Let's get started right away!
 
+To use **Layer2Triple**, simply open **QGIS** from the menu bar and hover over the vector through which you can see the tools, allowing you to manipulate vector layers. This way, you can access the **DBCells** plugins in the QGISPARQL cell.
 
+## Step 1: Loading a Layer in QGIS
 
-> `💡 Antes de iniciar este exercício, o Plugin **Layer2Triple** deve estar instalado no seu computador.`
-
-
-Vamos começar imediatamente!
-
-Para utilizarmos o **Layer2Triple** basta abrir o **QGIS** na barra de menu e passar o mouse por cima do vetor através do qual será possível ver as ferramentas nos permitindo, assim, manipular camadas vetoriais. Dessa forma será possível acessar em célula QGISPARQL os plugins da **DBCells**. 
-
-
-## Passo 1: Carregando Layer dentro do QGIS
-
-Para utilizarmos o **Layer2Triple** primeiramente vamos carregar uma camada vetorial abrindo um projeto  dentro do **QGIS.** Para isso podemos ir em “Abrir projeto” selecionando na barra de menu como mostrado na Figura 3 a seguir ou através do atalho(Ctrl+O)
+To use **Layer2Triple**, first, let's load a vector layer by opening a project within **QGIS**. You can do this by going to "Open Project," selecting it from the menu bar as shown in Figure 3 below, or using the shortcut (Ctrl+O).
 
 ![Figura 3- Abrir projeto QGIS](https://github.com/LambdaGeo/qgisparql-layer2triple/assets/108685222/4102803a-d485-472e-8f45-b8663b9a26e5)
 
-Figura 3- Abrir projeto QGIS
+**Figure 3 - Open QGIS Project**
 
-Podemos assim, selecionar o projeto do QGIS que tenham camadas vetoriais como mostrado na Figura 4.
+You can then select the QGIS project that contains vector layers, as shown in Figure 4.
 
-QGIS reconhece camadas vetoriais e matriciais.
+QGIS recognizes both vector and raster layers.
 
 ![Figura 4-escolha do projeto QGIS](https://github.com/LambdaGeo/qgisparql-layer2triple/assets/108685222/dea0caa8-5f61-4c72-bc8e-046dc662e656)
 
-Figura 4-escolha do projeto QGIS
+**Figure 4 - Choose QGIS Project**
 
-Ao ser carregado o projeto podemos ver a o dado gerado de maneira gráfica como mostrado na figura 5.  Nela temos a parte de camadas carregadas no painel "Camadas" do QGIS, as quais podemos selecionar para utilizarmos dentro do Plugin Layer2triple.
+Once the project is loaded, you can see the data generated graphically, as shown in Figure 5. In this figure, we have the layers loaded in the "Layers" panel of QGIS, which we can select for use within the Layer2triple Plugin.
 
-Com um mapa, que é formado por camadas vetoriais carregado, podemos começar a utilizar o plugin layer2triple.
+With a map, formed by loaded vector layers, we can begin to use the Layer2triple plugin.
 
 ![Figura 5-Camadas carregadas](https://github.com/LambdaGeo/qgisparql-layer2triple/assets/108685222/6f79d9e2-fc57-4422-8e80-66013f6b2a92)
 
-Figura 5-Camadas carregadas
+**Figure 5 - Loaded Layers**
 
-Depois de selecionar a camada vetorial a ser utilizada, basta abrir na barra de menu e passando o mouse por cima de “vetor”, será possível acessar em célula QGISPARQL os plugins da **DBCells**. 
+After selecting the vector layer to be used, simply open the plugin **Layer2Triple** from the menu bar by hovering over "Vector". This will allow you to access the **DBCells** plugins in the QGISPARQL cell.
 
-Na imagem a seguir podemos então abrir o plugin **Layer2triple** indo em vetor na barra de menu como mostrado na seta de número 1, e selecionar a o plugin que queremos, no caso o **Layer2triple** mostrado na seta de número 2 na figura 6.
+In the image below, you can open the **Layer2Triple** plugin by going to "Vector" in the menu bar, as shown by arrow number 1, and selecting the desired plugin, in this case, **Layer2Triple** indicated by arrow number 2 in Figure 6.
 
 ![Figura 6- abrir a interface do Layer2triple ](https://github.com/LambdaGeo/qgisparql-layer2triple/assets/108685222/bf18733d-30b3-4346-b3ba-965eca7e74a0)
 
-Figura 6- abrir a interface do Layer2triple 
+**Figure 6 - Open the Layer2Triple Interface**
 
-A Figura 7 é possivel ver o plugin aberto com as camadas carregadas, prontas para serem manipuladas dentro do Layer2triple.
+In Figure 7, you can see the plugin opened with the loaded layers, ready to be manipulated within Layer2Triple.
 ![Figura 7- layer carregado dentro do plugin](https://github.com/LambdaGeo/qgisparql-layer2triple/assets/108685222/ff931177-2d89-429b-9365-b72d6fc80cc1)
 
-Figura 7- layer carregado dentro do plugin 
+**Figure 7 - Loaded Layer within the Plugin**
 
-## Passo 2: Load vocabulary
+## Step 2: Load Vocabulary
 
-O Plugin Layer2Triple permite carregar vocabulários personalizados para mapear os atributos da camada vetorial em triplas RDF. Para carregar um vocabulário, siga as etapas descritas no decorrer desse tutorial.
+The Layer2Triple Plugin allows you to load custom vocabularies to map vector layer attributes into RDF triples. To load a vocabulary, follow the steps described in this tutorial.
 
-Com a camada geográfica aberta podemos então carregar o vocabulário que queremos exportar.
+With the geographic layer open, you can then load the vocabulary you want to export.
+
 ![Figura 8- Plugin com layer carregado](https://github.com/LambdaGeo/qgisparql-layer2triple/assets/108685222/113d157c-dd37-4dca-bc8e-d330b3127ac4)
 
-Figura 8- Plugin com layer carregado
+**Figure 8 - Plugin with Loaded Layer**
 
-Para isso vamos abrir a caixa de dialogo indo em **Vocabulary>Load Vocabulary** onde faremos o carregamento do vocabulário desejado como mostrado na Figura 9.  Clique no botão "Carregar Vocabulário". Será exibida a janela "Carregar Vocabulário"
+To do this, open the dialog box by going to **Vocabulary > Load Vocabulary**, where you will load the desired vocabulary as shown in Figure 9. Click the "Load Vocabulary" button. The "Load Vocabulary" window will be displayed.
+
 ![Figura 9- layer carregado dentro do plugin](https://github.com/LambdaGeo/qgisparql-layer2triple/assets/108685222/0a26549a-5af6-4179-989b-32b93d2fc208)
 
-Figura 9- layer carregado dentro do plugin 
+**Figure 9 - Loaded Layer within the Plugin**
 
-Preencha as informações do vocabulário, incluindo o formato (por exemplo, TTL) e a URL do namespace. Clique em "OK" para carregar o vocabulário.
+Fill in the vocabulary information, including the format (e.g., TTL) and the URL of the namespace. Click "OK" to load the vocabulary.
+
 ![Figura 10-Load Vocabulary](https://github.com/LambdaGeo/qgisparql-layer2triple/assets/108685222/89073102-2424-4dc3-8c08-54c22066214b)
 
-Figura 10-Load Vocabulary
+**Figure 10 - Load Vocabulary**
 
-Ao abrirmos essa caixa de dialogo podemos colocar as informações de prefixo, URL e formato que pode ser turtle(.ttl) ou Extensible Markup Language(.xml) como podemos ver na Figura 11.
+When you open this dialog box, you can enter the prefix, URL, and format information. The format can be Turtle (.ttl) or Extensible Markup Language (.xml), as shown in Figure 11.
+
 ![Figura 11- Inserindo vocabulário](https://github.com/LambdaGeo/qgisparql-layer2triple/assets/108685222/3eaec409-27bb-49b9-96f9-98924fc1179c)
 
-Figura 11- Inserindo vocabulário
+**Figure 11 - Inserting Vocabulary**
 
-Dessa forma, os atributos serão carregados na tabela de atributos como podemos ver na Figura 12 e uma mensagem de sucesso caso todos atributos sejam carregados.
+This way, the attributes will be loaded into the attribute table, as shown in Figure 12, along with a success message if all attributes are loaded successfully.
+
 ![Figura 12- Carregando vocabulário](https://github.com/LambdaGeo/qgisparql-layer2triple/assets/108685222/ea79834f-8f15-40a3-b9f5-1d819a00fa84)
 
-Figura 12- Carregando vocabulário
+**Figure 12 - Loading Vocabulary**
 
-Assim, depois que os atributos forem carregados, apertando em “Load layer” como podemos ver na Figura 13 podemos fazer o carregamento da camada que foi aberta onde automaticamente carregará os atributos.
+After the attributes are loaded, by clicking on "Load Layer" as shown in Figure 13, you can load the opened layer, which will automatically load the attributes.
+
 ![Figura 13- carregamento do layer para manipulação no plugin](https://github.com/LambdaGeo/qgisparql-layer2triple/assets/108685222/534a4433-37f5-4ea3-9d26-67a0b0118cf0)
 
-Figura 13- carregamento do layer para manipulação no plugin 
+**Figure 13 - Loading Layer for Manipulation in the Plugin**
 
-Para podermos ter certeza que esse processo foi concluído com sucesso ao efetuar o carregamento iremos receber uma mensagem de sucesso como mostrado na Figura 14. 
+To ensure that this process was completed successfully, upon loading, you will receive a success message as shown in Figure 14.
+
 ![Figura 14- Sucesso no carregamento do layer](https://github.com/LambdaGeo/qgisparql-layer2triple/assets/108685222/cafceccd-f5c6-4dd7-b7f1-529ce86e56ae)
 
-Figura 14- Sucesso no carregamento do layer
+**Figure 14 - Successful Layer Loading**
 
-Agora sim podemos partir para o Mapeamento dos atributos!! Vamos imediatamente!!
+Now we can move on to Attribute Mapping! Let's get started right away!!
 
-# Mapeamento dos atributos
+# Attribute Mapping
 
-Após configurar as opções iniciais e carregar os vocabulários, é necessário mapear os atributos da camada vetorial em triplas RDF. Na tabela "Atributos" na janela principal do Plugin Layer2Triple, você encontrará uma lista de conceitos disponíveis. Para mapear um atributo, siga as etapas abaixo:
+After configuring the initial options and loading vocabularies, it is necessary to map the attributes of the vector layer into RDF triples. In the "Attributes" table in the main Layer2Triple Plugin window, you will find a list of available concepts. To map an attribute, follow the steps below:
 
-- Selecione o conceito correspondente ao atributo na coluna "Concepts".
-- Escolha o tipo de mapeamento na coluna "Type":
-1. "Valor Constante": Insira um valor constante para o atributo.
-2. "Atributo da Camada": Selecione um atributo da camada vetorial.
-3. "Vocabulário": Selecione um conceito do vocabulário carregado.
-- Preencha o valor correspondente ao mapeamento selecionado.
+- Select the corresponding concept for the attribute in the "Concepts" column.
+- Choose the mapping type in the "Type" column:
+  1. "Constant Value": Enter a constant value for the attribute.
+  2. "Layer Attribute": Select an attribute from the vector layer.
+  3. "Vocabulary": Select a concept from the loaded vocabulary.
+- Fill in the value corresponding to the selected mapping.
 
-Para facilitar o processo, caso seja uma quantidade muito grande podemos usar a filtragem para acharmos mais rapidamente o atributo desejado como mostrado na Figura 15.
+To facilitate the process, in case there is a large number of attributes, you can use filtering to quickly find the desired attribute, as shown in Figure 15.
+
 ![Figura 15- mostrando uso da filtragem para seleção de conceitos](https://github.com/LambdaGeo/qgisparql-layer2triple/assets/108685222/d862772a-1d1b-401f-8cf8-a08bc3e594de)
 
-Figura 15- mostrando uso da filtragem para seleção de conceitos
+**Figure 15 - Demonstrating the Use of Filtering for Concept Selection**
 
-Repita essas etapas para mapear todos os atributos desejados.
+Repeat these steps to map all the desired attributes.
 
-## Passo 3: Settings 🛠️
+## Step 3: Settings 🛠️
 
-Nessa seção de configurações, podemos ver no decorrer desse tutorial, como abrir configurações ja salvas e como salvar configurações.
+In this settings section, you will learn in the course of this tutorial how to open saved configurations and how to save configurations.
 
-# Abrir configurações
+# Open Configurations
 
-Antes de fazermos as conversões da camada vetorial em triplas RDF, faz-se 
+Before we proceed with converting the vector layer into RDF triples, there is a step to be done.
 
-Aqui nessa seção podemos abrir configurações iniciais que já temos salvas em nosso computador  como mostrado na Figura 16. Para essa tarefa basta clicar em “**Settings**”, como mostrado na seta de numero 1, e depois em “**Open**”  para carregarmos tais configurações para tabela de atributos.                  
+In this section, you can open previously saved configurations on your computer, as shown in Figure 16. To do this, click on "**Settings**," as indicated by arrow number 1, and then on "**Open**" to load these configurations into the attribute table.
 
 ![Figura 16-abrir configurações](https://github.com/LambdaGeo/qgisparql-layer2triple/assets/108685222/754251a8-6a67-4053-a1fa-d3d192377de4)
 
-Figura 16-abrir configurações
+**Figure 16 - Open Configurations**
 
-Inicialmente podemos fazer o carregamento do layer, que contém os vocabulários (Arquivo JSON) como mostrado na seta de numero 1 na Figura 17.
+Initially, you can load the layer, which contains the vocabularies (JSON file), as shown in arrow number 1 in Figure 17.
+
 ![Figura 17- arquivo de configurações para tabela de atributos](https://github.com/LambdaGeo/qgisparql-layer2triple/assets/108685222/5621f36d-434c-4469-bc50-401e8512e15c)
 
-Figura 17- arquivo de configurações para tabela de atributos
+**Figure 17 - Configuration File for Attribute Table**
 
-o arquivo JSON “configura”, contém salvo todos os vocabulários necessários para gerar os dados
+The JSON file "configura" contains all the saved vocabularies necessary to generate the data.
 
-Antes de converter a camada vetorial em triplas RDF, é necessário configurar algumas opções iniciais. Na janela principal do Plugin Layer2Triple, você encontrará as seguintes configurações:
-URL Base: Insira a URL base para a geração das URIs das triplas RDF.
-Prefixo: Insira o prefixo a ser utilizado nas URIs das triplas RDF.
-Tipo RDF: Selecione o tipo RDF para as observações (por exemplo, qb:Observation).
+Before converting the vector layer into RDF triples, it is necessary to configure some initial options. In the main Layer2Triple Plugin window, you will find the following settings:
+- Base URL: Enter the base URL for generating RDF triple URIs.
+- Prefix: Enter the prefix to be used in RDF triple URIs.
+- RDF Type: Select the RDF type for observations (e.g., qb:Observation).
+  
 ![Figura 18-configurações optativas](https://github.com/LambdaGeo/qgisparql-layer2triple/assets/108685222/e57cbedb-7459-4e1b-aba5-d5cb59dc3a91)
 
-Figura 18-configurações optativas
+**Figure 18 - Optional Settings**
 
-# Salvando configurações
+# Saving Configurations
 
-E caso você queira salvar uma configurações vocabulários para geração de dados em sua máquina basta usar a funcionalidade de salvar configurações do plugin disponivel dentro de “**Settings**”, como mostrado na seta de numero 1 como mostrado na Figura 19, e depois em “********Save********”  para escolher uma pasta em que deseja salvar tais configurações.   
+If you want to save configurations and vocabularies for data generation on your machine, use the plugin's save configurations functionality available under "**Settings**," as shown by arrow number 1 in Figure 19, and then click on "**Save**" to choose a folder to save these configurations.
+
 ![Figura 19- Salvar configurações](https://github.com/LambdaGeo/qgisparql-layer2triple/assets/108685222/359c9941-651f-4009-b90c-95a44c0f8e5c)
 
-Figura 19- Salvar configurações
+**Figure 19 - Save Configurations**
 
-## Passo 4: Fazendo exportação de dados
+## Step 4: Data Export
 
-# Exportando…
+# Exporting...
 
-Neste tutorial para a exportação das observações, e inserção dos dados da base de dados, foi utilizado o Plugin, do QGIS, Layer2Triple, que permite a criação de arquivos RDF no formato Turtle (.ttl).
+In this tutorial for exporting observations and inserting data from the database, the Layer2Triple Plugin from QGIS was used. This plugin allows the creation of RDF files in Turtle (.ttl) format.
 
-Com o uso da linguagem de triplas RDF, é feita a conversão de camadas vetoriais nessa mesma linguagem, na qual é transformada  para o formato Terse Triple Language.
+Using the RDF triple language, vector layers are converted into this language and then transformed into the Terse Triple Language format.
 
-Nesse plugin, é possível exportar dados RDF, a partir de camadas vetoriais que representam os dados geográficos, em vários formatos, pontos, linhas ou mesmo polígonos, e, com isso, criar uma ontologia de um domínio específico.
+In this plugin, you can export RDF data from vector layers that represent geographic data, in various formats, such as points, lines, or polygons, and thus create an ontology for a specific domain.
 
-## Definição dos atributos
+## Definition of Attributes
 
-Após o carregamento dos vocabulários, é feita a modelagem das informações. Inicialmente é selecionado o tipo observação (RDF type), e estabelecido o prefixo “obs”, seguida da url base. 
+After loading the vocabularies, the information is modeled. Initially, the observation type (RDF type) is selected, and the prefix "obs" is established, followed by the base URL.
 
-Para seleção de conceitos selecionaremos uma medida estatística de media de pastagem. Então “dbc:measure:mean” representa a medida do tipo média e selecionaremos “Layer attribute” pois o valor “mean_past”, que é a media de pastagem, é um valor que advém do atributo.
+For the selection of concepts, we will choose a statistical measure of pasture mean. So, "dbc:measure:mean" represents the measure of the mean type, and we will select "Layer attribute" because the value "mean_past," which is the mean pasture, is a value that comes from the attribute.
 
-Pronto, com isso conseguimos selecionar uma informação a ser exportada como mostrado na Figura 20.
+There you go! With this, we can select information to be exported, as shown in Figure 20.
+
 ![Figura 20- Selecionando dados estatísticos de média de pastagem](https://github.com/LambdaGeo/qgisparql-layer2triple/assets/108685222/484c69bc-3a6e-4f97-bf01-8afb2eb180c2)
 
-Figura 20- Selecionando dados estatísticos de média de pastagem
+**Figure 20 - Selecting Statistical Data for Pasture Mean**
 
-Para fazer a agregação de constantes, precisa-se de um link, selecionando “qb:DataSet” em predicate, e essas informações irão ficar interligadas na classe “qb:DataSet”, selecionada no RDF Type, com um prefixo, e uma URL semelhante a URL base anterior.
+To perform the constant aggregation, a link is needed. Select "qb:DataSet" in the predicate, and this information will be interconnected in the "qb:DataSet" class, selected in the RDF Type, with a prefix and a URL similar to the previous base URL.
+
 ![Figura 21- agregações de constantes](https://github.com/LambdaGeo/qgisparql-layer2triple/assets/108685222/4ec09b68-c9da-49ae-b785-7c923952099a)
 
-Figura 21- agregações de constantes
+**Figure 21 - Constant Aggregations**
 
-Em seguida, é selecionado atributo de valor constante referente ao período, sdmx-dimension:refPeriod, e a área
+Next, the attribute of constant value related to the period, sdmx-dimension:refPeriod, and the area is selected.
+
 ![Figura 22-selecionando período e área](https://github.com/LambdaGeo/qgisparql-layer2triple/assets/108685222/130fc3e8-e9bf-417e-9b33-995fecadd39e)
 
-Figura 22-selecionando período e área 
+**Figure 22 - Selecting Period and Area**
 
-Após isso, é selecionado o vocabulário relacionado a medida em questão, que especifica o tipo de característica (feature) do conjunto de dados, no caso, dbc-code:landcover-pastp. Em seguida, também seleciona-se o atributo relacionado ao script .lua relacionado a esse conjunto de dados, dbc-attribute:scriptFile, e o atributo que especifica o local onde o arquivo de origem do conjunto de dados está localizado, dbc-attribute:sourceFile, que nesse caso refere-se a um arquivo TIF:
+After that, the vocabulary related to the measure in question is selected, specifying the type of feature of the dataset, in this case, dbc-code:landcover-pastp. Then, the attribute related to the .lua script associated with this dataset, dbc-attribute:scriptFile, and the attribute specifying the location where the dataset source file is located, dbc-attribute:sourceFile, are also selected. In this case, it refers to a TIF file.
+
 ![Figura 23- adição das URLs](https://github.com/LambdaGeo/qgisparql-layer2triple/assets/108685222/a667ed9d-8374-4f71-91dc-61a647d50201)
 
-Figura 23- adição das URLs 
+**Figure 23 - Adding URLs**
 
-Vale ressaltar que ambos os atributos File, encontram-se no repositório referente a base de dados, LambdaGeo/brlucc-database.
+It is worth noting that both File attributes are located in the repository related to the database, LambdaGeo/brlucc-database.
 
-Com isso, é possível gerar um arquivo TTL, que representa o conjunto de observações, referente a média de pastagem
+With this, it is possible to generate a TTL file representing the set of observations related to pasture mean.
 
-Na primeira parte, são estabelecidos os prefixos referentes as URL bases.
+In the first part, prefixes related to the base URLs are established.
 
 ```jsx
 @prefix dbc-attribute: <http://purl.org/linked-data/dbcells/attribute#> .
@@ -268,7 +277,7 @@ Na primeira parte, são estabelecidos os prefixos referentes as URL bases.
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 ```
 
-Em seguida, são definidas as observações, e seu respectivo tipo qb:dDataSet. Pode-se observar que cada observação tem uma medida de média estabelecida anteriormente (dbc-measure:mean) igual a um número representado em notação científica para zero.
+Next, the observations and their respective type qb:DataSet are defined. It can be observed that each observation has a mean measure established earlier (dbc-measure:mean), equal to a number represented in scientific notation for zero.
 
 ```jsx
 obs:00000703-6e8b-4840-8c77-ec83f8d8ba41 a qb:Observation ;
@@ -346,8 +355,7 @@ obs:0007fe19-f22b-425c-8567-26462d8aa042 a qb:Observation ;
     dbc-measure:mean 2.51875e-01 ;
     sdmx-dimension:refArea <https://purl.org/dbcells/epsg4326#R0_0830Cx-49_2083Cy-22_0547> .
 ```
-
-A última parte do código fornece informações adicionais sobre o conjunto de dados, como os atributos associados, os links para os arquivos de script e de origem, e o período de referência.
+The last part of the code provides additional information about the dataset, such as associated attributes, links to script and source files, and the reference period.
 
 ```jsx
 ds:f77ce462-8b99-48b8-b628-cc9d6d6c6c5a a qb:dataSet ;
