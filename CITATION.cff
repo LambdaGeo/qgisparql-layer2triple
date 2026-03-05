@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "Layer2Triple: A QGIS Plugin for Exporting Geographic Data as RDF Triples"
+authors:
+  - family-names: "Souza Costa"
+    given-names: "Sérgio"
+    orcid: ""
+    email: sergio.costa@ufma.br
+    affiliation: "Universidade Federal do Maranhão (UFMA)"
+  - family-names: "Junior"
+    given-names: "Nerval"
+    email: nerval1@hotmail.com
+    affiliation: "Universidade Federal do Maranhão (UFMA)"
+repository-code: "https://github.com/LambdaGeo/qgisparql-layer2triple"
+license: GPL-2.0
+version: "0.1"
+date-released: "2023-04-03"
+keywords:
+  - QGIS
+  - RDF
+  - linked data
+  - GIS
+  - semantic web
+  - GeoSPARQL
+  - Turtle
+  - ontology
