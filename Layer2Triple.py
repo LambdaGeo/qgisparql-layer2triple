@@ -113,7 +113,13 @@ class Layer2Triple:
         self.properties_concepts = []
         self.class_concepts = []
         self.fields_name = []
-        self.namespaces = {"geo": Namespace("http://www.opengis.net/ont/geosparql#")}
+        self.namespaces = {
+            "geo": Namespace("http://www.opengis.net/ont/geosparql#"),
+            "dbc": Namespace("https://purl.org/linked-data/dbcells#"),
+            "dbc-m": Namespace("https://purl.org/linked-data/dbcells/measure#"),
+            "dbc-a": Namespace("https://purl.org/linked-data/dbcells/attribute#"),
+            "dbc-c": Namespace("https://purl.org/linked-data/dbcells/code#")
+        }
 
     def tr(self, message):
         return QCoreApplication.translate('Layer2Triple', message)
@@ -202,7 +208,7 @@ class Layer2Triple:
 
             self.dlg.comboID.textActivated.connect(self.comboID_clicked)
 
-            self.load_default_dbcells()
+        self.load_default_dbcells()
 
         self.dlg.groupBoxConstants.setVisible(False)
         self.update_comboLayer()
@@ -212,6 +218,7 @@ class Layer2Triple:
     def load_default_dbcells(self):
         # O identificador é o PURL, mas o download ocorre no GitHub
         default_vocabs = [
+            ("geo", "http://www.opengis.net/ont/geosparql", "ttl"),
             ("dbc-m", "https://purl.org/linked-data/dbcells/measure", "ttl"),
             ("dbc-a", "https://purl.org/linked-data/dbcells/attribute", "ttl"),
             ("dbc-c", "https://purl.org/linked-data/dbcells/code", "ttl")
@@ -219,10 +226,11 @@ class Layer2Triple:
         
         for prefix, url, fmt in default_vocabs:
             self.task = QgsTask.fromFunction(
-                f'Loading {prefix}...',
-                self.load_vocabulary,
-                prefix=prefix, url=url, format=fmt,
-                on_finished=partial(self.fill_table_from_task))
+                    'Loading vocabulary...',
+                    self.load_vocabulary,
+                    prefix=prefix, url=url, format=fmt, # Use 'fmt'
+                    on_finished=partial(self.fill_table_from_task))
+            # MUITO IMPORTANTE: Você esqueceu de adicionar a tarefa ao gerenciador!
             QgsApplication.taskManager().addTask(self.task)
 
     def fill_table(self, start):
@@ -288,27 +296,40 @@ class Layer2Triple:
                 'Layer2Triple', level=Qgis.Critical)
             raise Exception(f'Could not load vocabulary: {e}')
 
+        # 1. Query para Classes e Conceitos SKOS (Uso do solo, etc)
         q_classes = """
             PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             PREFIX owl: <http://www.w3.org/2002/07/owl#>
-            SELECT ?p WHERE { ?p rdf:type owl:Class }
+            PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+            SELECT ?p WHERE { 
+                { ?p rdf:type owl:Class } UNION 
+                { ?p rdf:type skos:Concept } 
+            }
         """
         for r in g.query(q_classes):
-            attr = re.split(r'[#/]', r["p"])[-1]
-            self.class_concepts.append(f'{prefix}:{attr}')
+            attr = re.split(r'[#/]', str(r["p"]))[-1]
+            concept = f'{prefix}:{attr}'
+            if concept not in self.class_concepts:
+                self.class_concepts.append(concept)
 
+        # 2. Query para Propriedades, Medidas e Atributos (DBCells)
         q_properties = """
             PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             PREFIX owl: <http://www.w3.org/2002/07/owl#>
+            PREFIX qb: <http://purl.org/linked-data/cube#>
             SELECT ?p WHERE {
                 { ?p rdf:type owl:DatatypeProperty } UNION
                 { ?p rdf:type owl:ObjectProperty } UNION
-                { ?p rdf:type rdf:Property }
+                { ?p rdf:type rdf:Property } UNION
+                { ?p rdf:type qb:MeasureProperty } UNION
+                { ?p rdf:type qb:AttributeProperty }
             }
         """
         for r in g.query(q_properties):
-            attr = re.split(r'[#/]', r["p"])[-1]
-            self.properties_concepts.append(f'{prefix}:{attr}')
+            attr = re.split(r'[#/]', str(r["p"]))[-1]
+            concept = f'{prefix}:{attr}'
+            if concept not in self.properties_concepts:
+                self.properties_concepts.append(concept)
 
         if prefix not in self.namespaces:
             self.namespaces[prefix] = Namespace(url)
@@ -490,20 +511,32 @@ class Layer2Triple:
                 level=Qgis.Warning, duration=3)
 
     def fill_table_from_task(self, exception, quant_concepts=None):
-        """Callback after vocabulary loading task completes."""
-        if not exception:
-            self.fill_table(0)
-            self.iface.messageBar().clearWidgets()
-            self.iface.messageBar().pushMessage(
-                "Success",
-                f"{quant_concepts} concepts loaded successfully.",
-                level=Qgis.Success, duration=3)
-        else:
-            QgsMessageLog.logMessage(
-                f'Vocabulary loading failed: {exception}', 'Layer2Triple', level=Qgis.Critical)
-            self.iface.messageBar().pushMessage(
-                "Error loading vocabulary", f"{exception}",
-                level=Qgis.Warning, duration=5)
+            """Callback acionado após o carregamento de cada vocabulário."""
+            if not exception:
+                # 1. Atualiza a tabela de mapeamento de atributos
+                self.fill_table(0)
+                
+                # 2. Força a atualização dos ComboBoxes de Classe RDF (fora da tabela)
+                # Isso é vital para que os novos conceitos apareçam nos menus superiores
+                self.dlg.comboRDFType.clear()
+                self.dlg.comboRDFType_2.clear()
+                for c in sorted(self.class_concepts):
+                    self.dlg.comboRDFType.addItem(c)
+                    self.dlg.comboRDFType_2.addItem(c)
+
+                # 3. Atualiza o predicado de agregação (se houver)
+                self.dlg.comboBoxPredicate.clear()
+                for p in sorted(self.properties_concepts):
+                    self.dlg.comboBoxPredicate.addItem(p)
+                    
+                # Feedback visual no MessageBar
+                self.iface.messageBar().pushMessage(
+                    "Vocabulário Carregado", 
+                    f"Total de conceitos disponíveis: {len(self.properties_concepts)}", 
+                    level=Qgis.Success, duration=3)
+            else:
+                QgsMessageLog.logMessage(
+                    f'Erro no carregamento: {exception}', 'Layer2Triple', level=Qgis.Critical)
 
     def read_selected_attributes(self):
         """Collect selected attribute mappings from the UI table.
