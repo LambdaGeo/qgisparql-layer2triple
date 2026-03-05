@@ -1,7 +1,16 @@
+# Python bytecode
 __pycache__/
+*.pyc
+*.pyo
 
-__pycache__/__init__.cpython-39.pyc
-__pycache__/Layer2Triple_dialog.cpython-39.pyc
-__pycache__/Layer2Triple.cpython-39.pyc
-__pycache__/resources.cpython-39.pyc
-__pycache__/Layer2Triple.cpython-310.pyc
+# Qt compiled resources (gerados automaticamente)
+resources_rc.py
+*_ui.py
+
+# Editor
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
