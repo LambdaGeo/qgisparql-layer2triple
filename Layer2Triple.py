@@ -177,6 +177,7 @@ class Layer2Triple:
             self.iface.removeToolBarIcon(action)
 
 
+
     def run(self):
         """Run method that performs all the real work"""
 
@@ -201,9 +202,28 @@ class Layer2Triple:
 
             self.dlg.comboID.textActivated.connect(self.comboID_clicked)
 
+            self.load_default_dbcells()
+
         self.dlg.groupBoxConstants.setVisible(False)
         self.update_comboLayer()
         self.dlg.show()
+
+
+    def load_default_dbcells(self):
+        # O identificador é o PURL, mas o download ocorre no GitHub
+        default_vocabs = [
+            ("dbc-m", "https://purl.org/linked-data/dbcells/measure", "ttl"),
+            ("dbc-a", "https://purl.org/linked-data/dbcells/attribute", "ttl"),
+            ("dbc-c", "https://purl.org/linked-data/dbcells/code", "ttl")
+        ]
+        
+        for prefix, url, fmt in default_vocabs:
+            self.task = QgsTask.fromFunction(
+                f'Loading {prefix}...',
+                self.load_vocabulary,
+                prefix=prefix, url=url, format=fmt,
+                on_finished=partial(self.fill_table_from_task))
+            QgsApplication.taskManager().addTask(self.task)
 
     def fill_table(self, start):
         """Populate the attribute mapping table with loaded vocabulary concepts."""
@@ -553,31 +573,40 @@ class Layer2Triple:
         Returns:
             Dict mapping resource IDs to attribute dicts.
         """
-        triples = {}
+        
         total = len(features)
+        if total == 0:
+            return {} 
+        
+        triples = {}
         progressDialog = self.create_progress_dialog(f"Exporting {total} features", total)
 
-        for i, feature in enumerate(features, start=1):
-            triple = {}
-            mVocab['asWkt'] = URIRef("http://www.opengis.net/ont/geosparql#asWKT")
+        try:
 
-            if self.dlg.checkGeometries.isChecked():
-                # Use asWkt() directly to support all geometry types
-                triple['asWkt'] = feature.geometry().asWkt()
+            for i, feature in enumerate(features, start=1):
+                triple = {}
+                mVocab['asWkt'] = URIRef("http://www.opengis.net/ont/geosparql#asWKT")
 
-            for key in saveAttrs:
-                triple[key] = feature[key]
+                if self.dlg.checkGeometries.isChecked():
+                    # Use asWkt() directly to support all geometry types
+                    triple['asWkt'] = feature.geometry().asWkt()
 
-            if self.dlg.comboID.currentText() == "Layer Attribute":
-                resource_id = feature[self.dlg.comboAttributeID.currentText()]
-            else:
-                resource_id = str(uuid.uuid4())
+                for key in saveAttrs:
+                    triple[key] = feature[key]
 
-            triples[resource_id] = triple
+                if self.dlg.comboID.currentText() == "Layer Attribute":
+                    resource_id = feature[self.dlg.comboAttributeID.currentText()]
+                else:
+                    resource_id = str(uuid.uuid4())
 
-            progressDialog.setValue(i)
-            progressDialog.setLabelText(f"Exporting feature {i} of {total}")
-            QCoreApplication.processEvents()
+                triples[resource_id] = triple
+
+                progressDialog.setValue(i)
+                progressDialog.setLabelText(f"Exporting feature {i} of {total}")
+                QCoreApplication.processEvents()
+        
+        finally:
+            progressDialog.close() # Isso impede que a tela fique travada
 
         return triples
 
