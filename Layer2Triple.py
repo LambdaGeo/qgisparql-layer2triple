@@ -561,53 +561,59 @@ class Layer2Triple:
         progressDialog.show()
         progressDialog.setCancelButton(None)
         return progressDialog
+    
+
+    def update_status_bar(self, progress: float, message: str = "Exporting") -> None:
+        """Atualiza a barra de status do QGIS com o progresso da exportação."""
+        self.iface.mainWindow().statusBar().showMessage(
+            f"Layer2Triple: {message}... {int(progress)}%"
+        )
+        if progress >= 100:
+            # Limpa após 3 segundos ou ao terminar
+            self.iface.mainWindow().statusBar().clearMessage()
 
     def create_rdf_triples(self, features, saveAttrs, mVocab):
-        """Build a dict of RDF triples from layer features.
-
-        Args:
-            features: List of QgsFeature objects.
-            saveAttrs: Dict mapping layer attribute names to RDF predicates.
-            mVocab: Dict mapping predicates to their URIRef namespaces.
-
-        Returns:
-            Dict mapping resource IDs to attribute dicts.
-        """
-        
-        total = len(features)
-        if total == 0:
-            return {} 
-        
+        """Converte feições do QGIS em um dicionário de triplas RDF."""
         triples = {}
-        progressDialog = self.create_progress_dialog(f"Exporting {total} features", total)
+        total = len(features)
+        
+        if total == 0:
+            self.iface.messageBar().pushMessage(
+                "Aviso", "Nenhuma feição encontrada para exportar. Verifique a seleção.", 
+                level=Qgis.Warning, duration=5)
+            return triples
 
         try:
-
             for i, feature in enumerate(features, start=1):
                 triple = {}
+                # Define o predicado de geometria padrão (GeoSPARQL) [cite: 164]
                 mVocab['asWkt'] = URIRef("http://www.opengis.net/ont/geosparql#asWKT")
 
                 if self.dlg.checkGeometries.isChecked():
-                    # Use asWkt() directly to support all geometry types
-                    triple['asWkt'] = feature.geometry().asWkt()
+                    geom = feature.geometry()
+                    if geom:
+                        # Exporta em formato WKT conforme o padrão OGC [cite: 160, 164]
+                        triple['asWkt'] = geom.asWkt()
 
                 for key in saveAttrs:
                     triple[key] = feature[key]
 
+                # Define o Sujeito (URI) conforme a estratégia escolhida [cite: 135, 140]
                 if self.dlg.comboID.currentText() == "Layer Attribute":
-                    resource_id = feature[self.dlg.comboAttributeID.currentText()]
+                    resource_id = str(feature[self.dlg.comboAttributeID.currentText()])
                 else:
-                    resource_id = str(uuid.uuid4())
+                    resource_id = str(uuid.uuid4()) # Estratégia UUID [cite: 138, 139]
 
                 triples[resource_id] = triple
 
-                progressDialog.setValue(i)
-                progressDialog.setLabelText(f"Exporting feature {i} of {total}")
-                QCoreApplication.processEvents()
-        
-        finally:
-            progressDialog.close() # Isso impede que a tela fique travada
+                # Atualiza progresso na barra de status a cada 50 feições
+                if i % 50 == 0 or i == total:
+                    self.update_status_bar((i / total) * 100, "Extracting features")
+                    QCoreApplication.processEvents()
 
+        except Exception as e:
+            QgsMessageLog.logMessage(f"Erro na extração: {str(e)}", "Layer2Triple", level=Qgis.Critical)
+            
         return triples
 
     def read_constants(self, save_constants, mVocab):
@@ -646,85 +652,51 @@ class Layer2Triple:
                 level=Qgis.Warning, duration=3)
 
     def create_rdf_graph(self, mainNamespace, save_constants, mVocab, path, triples):
-        """Build the RDF graph from triples and dispatch the TTL saving task.
+        """Gera o grafo RDF e dispara a tarefa de salvamento em disco."""
+        if not triples:
+            return
 
-        Args:
-            mainNamespace: rdflib Namespace for observation subjects.
-            save_constants: Dict of constant predicate-value pairs.
-            mVocab: Dict mapping attribute names to URIRefs.
-            path: Output file path.
-            triples: Dict of resource IDs to attribute dicts.
-        """
         try:
             g = Graph()
-
-            self.iface.messageBar().pushMessage(
-                "Info", f"Building RDF graph for {path}...",
-                level=Qgis.Info, duration=10)
-
+            # Registra os prefixos e namespaces [cite: 149, 150]
             g.bind(self.dlg.linePrefix2.text(), mainNamespace)
-
-            constants_p_o = self.read_constants(save_constants, mVocab)
-
-            if self.dlg.checkConstant.isChecked():
-                aggregNamespace = Namespace(self.dlg.lineURLBase_2.text())
-                g.bind(self.dlg.linePrefix2_2.text(), aggregNamespace)
-                aggregate = aggregNamespace[str(uuid.uuid4())]
-                url_aggregate = self.toURL(self.dlg.comboRDFType_2.currentText())
-                g.add((aggregate, RDF.type, url_aggregate))
-                for (p, o) in constants_p_o:
-                    g.add((aggregate, p, o))
-
             for prefix, name in self.namespaces.items():
                 g.bind(prefix, name)
 
             total = len(triples)
-            progressDialog = self.create_progress_dialog(f"Saving graph ({total} resources)", total)
+            constants_p_o = self.read_constants(save_constants, mVocab)
 
             for i, (resource_id, attributes) in enumerate(triples.items(), start=1):
                 subject = mainNamespace[resource_id]
-                url_v = self.toURL(self.dlg.comboRDFType.currentText())
-                g.add((subject, RDF.type, url_v))
+                
+                # Define a Classe RDF (ex: geo:SpatialObject) [cite: 143, 155]
+                url_class = self.toURL(self.dlg.comboRDFType.currentText())
+                g.add((subject, RDF.type, url_class))
 
                 for attr, value in attributes.items():
                     predicate = mVocab[attr]
-                    if validade_url(str(value)):
-                        obj = URIRef(value)
-                    else:
-                        obj = Literal(value)
+                    # Converte literais ou URIs conforme a validade da URL [cite: 189]
+                    obj = URIRef(value) if validade_url(str(value)) else Literal(value)
                     g.add((subject, predicate, obj))
 
-                if self.dlg.checkConstant.isChecked():
-                    url_p = self.toURL(self.dlg.comboBoxPredicate.currentText())
-                    g.add((subject, url_p, aggregate))
-                else:
-                    for (p, o) in constants_p_o:
-                        g.add((subject, p, o))
+                # Adiciona constantes ou mapeamentos de vocabulário [cite: 190, 191]
+                for (p, o) in constants_p_o:
+                    g.add((subject, p, o))
 
-                progressDialog.setValue(i)
-                progressDialog.setLabelText(f"Saving resource {i} of {total}")
-                QCoreApplication.processEvents()
+                if i % 100 == 0 or i == total:
+                    self.update_status_bar((i / total) * 100, "Building RDF Graph")
+                    QCoreApplication.processEvents()
 
-            QgsMessageLog.logMessage('Dispatching TTL save task.', 'Layer2Triple')
+            # Dispara o salvamento assíncrono para não travar o QGIS [cite: 38, 255]
             self.task = QgsTask.fromFunction(
-                'Saving TTL file...',
+                'Saving Turtle file...',
                 self.save_to_ttl,
                 path=path, g=g,
                 on_finished=partial(self.pos_save_to_ttl, path))
             QgsApplication.taskManager().addTask(self.task)
 
-        except (ValueError, KeyError) as e:
-            QgsMessageLog.logMessage(
-                f'Error building RDF graph: {e}', 'Layer2Triple', level=Qgis.Critical)
-            self.iface.messageBar().pushMessage(
-                "Error", f"Failed to build RDF graph: {e}",
-                level=Qgis.Warning, duration=5)
         except Exception as e:
-            QgsMessageLog.logMessage(
-                f'Unexpected error in create_rdf_graph: {e}', 'Layer2Triple', level=Qgis.Critical)
-            self.iface.messageBar().pushMessage(
-                "Error", f"Unexpected error: {e}",
-                level=Qgis.Warning, duration=5)
+            self.iface.messageBar().pushMessage("Erro Grave", f"Falha ao gerar grafo: {e}", level=Qgis.Critical)
 
     def save_file(self):
         """Main export method: collect attributes, build triples and save to file."""
