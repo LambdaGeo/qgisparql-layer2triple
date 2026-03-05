@@ -62,11 +62,14 @@
           </item>
           <item>
            <widget class="QCheckBox" name="checkSelected">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
             <property name="text">
              <string>Selected features</string>
             </property>
             <property name="checked">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
            </widget>
           </item>
@@ -471,7 +474,7 @@
      <x>0</x>
      <y>0</y>
      <width>792</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuSettings">
