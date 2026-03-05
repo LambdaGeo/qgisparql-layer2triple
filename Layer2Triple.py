@@ -94,18 +94,8 @@ class Layer2Triple:
     """QGIS Plugin Implementation."""
 
     def __init__(self, iface):
-        """Constructor.
-
-        :param iface: An interface instance that will be passed to this class
-            which provides the hook by which you can manipulate the QGIS
-            application at run time.
-        :type iface: QgsInterface
-        """
-        # Save reference to the QGIS interface
         self.iface = iface
-        # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
-        # initialize locale
         locale = QSettings().value('locale/userLocale')[0:2]
         locale_path = os.path.join(
             self.plugin_dir,
@@ -117,35 +107,15 @@ class Layer2Triple:
             self.translator.load(locale_path)
             QCoreApplication.installTranslator(self.translator)
 
-        # Declare instance attributes
         self.actions = []
         self.menu = self.tr(u'&QGISSPARQL')
-
-        # Check if plugin was started the first time in current QGIS session
-        # Must be set in initGui() to survive plugin reloads
         self.first_start = None
-
-        #self.concepts = []
         self.properties_concepts = []
         self.class_concepts = []
         self.fields_name = []
+        self.namespaces = {"geo": Namespace("http://www.opengis.net/ont/geosparql#")}
 
-        self.namespaces = {"geo": Namespace("http://www.opengis.net/ont/geosparql#")} # save os namespaces carregads
-       
-
-        # noinspection PyMethodMayBeStatic
     def tr(self, message):
-        """Get the translation for a string using Qt translation API.
-
-        We implement this ourselves since we do not inherit QObject.
-
-        :param message: String for translation.
-        :type message: str, QString
-
-        :returns: Translated version of message.
-        :rtype: QString
-        """
-        # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
         return QCoreApplication.translate('Layer2Triple', message)
 
 
@@ -160,44 +130,6 @@ class Layer2Triple:
         status_tip=None,
         whats_this=None,
         parent=None):
-        """Add a toolbar icon to the toolbar.
-
-        :param icon_path: Path to the icon for this action. Can be a resource
-            path (e.g. ':/plugins/foo/bar.png') or a normal file system path.
-        :type icon_path: str
-
-        :param text: Text that should be shown in menu items for this action.
-        :type text: str
-
-        :param callback: Function to be called when the action is triggered.
-        :type callback: function
-
-        :param enabled_flag: A flag indicating if the action should be enabled
-            by default. Defaults to True.
-        :type enabled_flag: bool
-
-        :param add_to_menu: Flag indicating whether the action should also
-            be added to the menu. Defaults to True.
-        :type add_to_menu: bool
-
-        :param add_to_toolbar: Flag indicating whether the action should also
-            be added to the toolbar. Defaults to True.
-        :type add_to_toolbar: bool
-
-        :param status_tip: Optional text to show in a popup when mouse pointer
-            hovers over the action.
-        :type status_tip: str
-
-        :param parent: Parent widget for the new action. Defaults None.
-        :type parent: QWidget
-
-        :param whats_this: Optional text to show in the status bar when the
-            mouse pointer hovers over the action.
-
-        :returns: The action that was created. Note that the action is also
-            added to self.actions list.
-        :rtype: QAction
-        """
 
         icon = QIcon(icon_path)
         action = QAction(icon, text, parent)
@@ -211,7 +143,6 @@ class Layer2Triple:
             action.setWhatsThis(whats_this)
 
         if add_to_toolbar:
-            # Adds plugin icon to Plugins toolbar
             self.iface.addToolBarIcon(action)
 
         if add_to_menu:
@@ -234,7 +165,6 @@ class Layer2Triple:
             callback=self.run,
             parent=self.iface.mainWindow())
 
-        # will be set False in run()
         self.first_start = True
 
 
@@ -250,8 +180,6 @@ class Layer2Triple:
     def run(self):
         """Run method that performs all the real work"""
 
-        # Create the dialog with elements (after translation) and keep reference
-        # Only create GUI ONCE in callback, so that it will only load when the plugin is started
         if self.first_start == True:
             self.first_start = False
             self.dlg = Layer2TripleMain()
@@ -271,162 +199,161 @@ class Layer2Triple:
 
             self.dlg.groupBoxConstants.setStyleSheet("QGroupBox { border: 0px; }")
 
-
             self.dlg.comboID.textActivated.connect(self.comboID_clicked)
 
-
-
         self.dlg.groupBoxConstants.setVisible(False)
-
         self.update_comboLayer()
-
-    
         self.dlg.show()
 
-    def fill_table(self,start):
-
-            QgsMessageLog.logMessage('Loading table.', 'Layer2Triple')
-            
-            self.dlg.search_bar.setPlaceholderText("Filtrar concepts...")
-
-            # Configura a tabela de atributos
-            self.dlg.tableAttributes.setRowCount(len(self.properties_concepts))
-            self.dlg.tableAttributes.setColumnCount(3)
-            self.dlg.tableAttributes.setHorizontalHeaderLabels(["Properties", "Type", "Value"])
-
-            i = start
-            for c in self.properties_concepts[start:]:
-                self.dlg.tableAttributes.setCellWidget(i, 0, QCheckBox(c))
-                comboBox = QComboBox()
-                comboBox.textActivated.connect(partial(self.combo_changed, i))
-                comboBox.addItem("Constant Value")
-                comboBox.addItem("Layer Attribute")
-                comboBox.addItem("Vocabulary")
-                self.dlg.tableAttributes.setCellWidget(i, 1, comboBox)
-                self.dlg.tableAttributes.setCellWidget(i, 2, QLineEdit())
-                
-                i += 1
-
-            self.dlg.search_bar.textChanged.connect(self.filter_table)
-
-            for c in self.class_concepts:
-                self.dlg.comboRDFType.addItem(c)
-                self.dlg.comboRDFType_2.addItem(c)
+    def fill_table(self, start):
+        """Populate the attribute mapping table with loaded vocabulary concepts."""
+        QgsMessageLog.logMessage('Loading table.', 'Layer2Triple')
         
+        self.dlg.search_bar.setPlaceholderText("Filter concepts...")
 
-            for c in self.properties_concepts:
-                self.dlg.comboBoxPredicate.addItem(c)
+        self.dlg.tableAttributes.setRowCount(len(self.properties_concepts))
+        self.dlg.tableAttributes.setColumnCount(3)
+        self.dlg.tableAttributes.setHorizontalHeaderLabels(["Properties", "Type", "Value"])
+
+        i = start
+        for c in self.properties_concepts[start:]:
+            self.dlg.tableAttributes.setCellWidget(i, 0, QCheckBox(c))
+            comboBox = QComboBox()
+            comboBox.textActivated.connect(partial(self.combo_changed, i))
+            comboBox.addItem("Constant Value")
+            comboBox.addItem("Layer Attribute")
+            comboBox.addItem("Vocabulary")
+            self.dlg.tableAttributes.setCellWidget(i, 1, comboBox)
+            self.dlg.tableAttributes.setCellWidget(i, 2, QLineEdit())
+            i += 1
+
+        self.dlg.search_bar.textChanged.connect(self.filter_table)
+
+        for c in self.class_concepts:
+            self.dlg.comboRDFType.addItem(c)
+            self.dlg.comboRDFType_2.addItem(c)
+
+        for c in self.properties_concepts:
+            self.dlg.comboBoxPredicate.addItem(c)
 
 
     def filter_table(self):
+        """Filter the attribute table rows based on search bar text."""
         text = self.dlg.search_bar.text().lower()
         for row in range(self.dlg.tableAttributes.rowCount()):
             concept = self.dlg.tableAttributes.cellWidget(row, 0).text().lower()
-            if text in concept:
-                self.dlg.tableAttributes.setRowHidden(row, False)
-            else:
-                self.dlg.tableAttributes.setRowHidden(row, True)
+            self.dlg.tableAttributes.setRowHidden(row, text not in concept)
 
     def load_vocabulary(self, task, prefix, url, format):
-            QgsMessageLog.logMessage('the task is already running.', 'Layer2Triple')
-               
+        """Load an OWL vocabulary from a remote URL and extract classes and properties.
+
+        Args:
+            task: QgsTask instance (required by QgsTask.fromFunction).
+            prefix: Namespace prefix to use for extracted concepts.
+            url: URL of the OWL vocabulary file.
+            format: RDF serialization format ('ttl' or 'xml').
+
+        Returns:
+            Number of property concepts loaded, or None on failure.
+        """
+        QgsMessageLog.logMessage(
+            f'Loading vocabulary from {url}...', 'Layer2Triple')
+
+        try:
             g = Graph()
             g.parse(url, format=format)
-            print (g)
+        except Exception as e:
+            QgsMessageLog.logMessage(
+                f'Failed to parse vocabulary from {url}: {e}',
+                'Layer2Triple', level=Qgis.Critical)
+            raise Exception(f'Could not load vocabulary: {e}')
 
-            q = """
-                PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                PREFIX owl: <http://www.w3.org/2002/07/owl#>
+        q_classes = """
+            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            PREFIX owl: <http://www.w3.org/2002/07/owl#>
+            SELECT ?p WHERE { ?p rdf:type owl:Class }
+        """
+        for r in g.query(q_classes):
+            attr = re.split(r'[#/]', r["p"])[-1]
+            self.class_concepts.append(f'{prefix}:{attr}')
 
-                SELECT ?p
-                WHERE 
-                {
-                 ?p rdf:type owl:Class
-                }
-            """
+        q_properties = """
+            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            PREFIX owl: <http://www.w3.org/2002/07/owl#>
+            SELECT ?p WHERE {
+                { ?p rdf:type owl:DatatypeProperty } UNION
+                { ?p rdf:type owl:ObjectProperty } UNION
+                { ?p rdf:type rdf:Property }
+            }
+        """
+        for r in g.query(q_properties):
+            attr = re.split(r'[#/]', r["p"])[-1]
+            self.properties_concepts.append(f'{prefix}:{attr}')
 
-            # Apply the query to the graph and iterate through results
-            for r in g.query(q):
-                attr = re.split(r'[#/]', r["p"])[-1]
-                name = prefix+":"+attr
-                self.class_concepts.append(name)
+        if prefix not in self.namespaces:
+            self.namespaces[prefix] = Namespace(url)
 
-            q = """
-                PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                PREFIX owl: <http://www.w3.org/2002/07/owl#>
+        QgsMessageLog.logMessage(
+            f'Vocabulary loaded: {len(self.properties_concepts)} properties, '
+            f'{len(self.class_concepts)} classes.',
+            'Layer2Triple')
 
-                SELECT ?p
-                WHERE 
-                {
-                { ?p rdf:type owl:DatatypeProperty} UNION
-                { ?p rdf:type owl:ObjectProperty} UNION
-                { ?p rdf:type rdf:Property}  
-                }
-            """
-
-            # Apply the query to the graph and iterate through results
-            for r in g.query(q):
-                attr = re.split(r'[#/]', r["p"])[-1]
-                name = prefix+":"+attr
-                self.properties_concepts.append(name)
-            
-            if prefix not in self.namespaces:
-                self.namespaces[prefix] = Namespace(url)
-
-            QgsMessageLog.logMessage('Vocabulary loaded', 'Triple2Layer')
-            
-            return len(self.properties_concepts)
+        return len(self.properties_concepts)
 
 
-    def show_aggregated_group (self):
-        if self.dlg.groupBoxConstants.isVisible():
-            self.dlg.groupBoxConstants.setVisible(False)
-        else:
-            self.dlg.groupBoxConstants.setVisible(True)
-        
+    def show_aggregated_group(self):
+        """Toggle visibility of the constant aggregations group box."""
+        visible = self.dlg.groupBoxConstants.isVisible()
+        self.dlg.groupBoxConstants.setVisible(not visible)
 
-    def comboID_clicked (self):
-        if self.dlg.comboID.currentText() == "Layer Attribute":
-            self.dlg.comboAttributeID.setEnabled(True)
-        else:
-            self.dlg.comboAttributeID.setEnabled(False)
-
-
-
+    def comboID_clicked(self):
+        """Enable or disable the attribute ID combo based on ID type selection."""
+        self.dlg.comboAttributeID.setEnabled(
+            self.dlg.comboID.currentText() == "Layer Attribute")
 
     def show_dialog_vocabulary(self):
+        """Show the vocabulary loading dialog."""
         self.vocab_dlg.show()
 
-
-
     def handle_dialog_vocabulary(self):
+        """Handle vocabulary dialog confirmation and start the loading task."""
         format = self.vocab_dlg.comboFormat.currentText()
         url = self.vocab_dlg.lineURL.text()
         prefix = self.vocab_dlg.linePrefix.text()
 
-        #"http://purl.org/linked-data/sdmx/2009/dimension#""
+        if not url.strip():
+            self.iface.messageBar().pushMessage(
+                "Warning", "Please enter a vocabulary URL.",
+                level=Qgis.Warning, duration=3)
+            return
+
+        if not prefix.strip():
+            self.iface.messageBar().pushMessage(
+                "Warning", "Please enter a namespace prefix.",
+                level=Qgis.Warning, duration=3)
+            return
 
         self.iface.messageBar().pushMessage(
-            "Info", "Loading vocabulary",
+            "Info", f"Loading vocabulary from {url}...",
             level=Qgis.Info, duration=3)
 
-        QgsMessageLog.logMessage('Task to loading vocabulary', 'Layer2Triple')                                        
-        self.task = QgsTask.fromFunction('Loading vocabulary...', 
-                                        self.load_vocabulary, 
-                                        prefix=prefix, url= url, format= format, 
-                                        on_finished=partial(self.fill_table_from_task)) 
-    
+        QgsMessageLog.logMessage('Starting vocabulary loading task.', 'Layer2Triple')
+        self.task = QgsTask.fromFunction(
+            'Loading vocabulary...',
+            self.load_vocabulary,
+            prefix=prefix, url=url, format=format,
+            on_finished=partial(self.fill_table_from_task))
+
         QgsApplication.taskManager().addTask(self.task)
-        
 
     def load_fields(self):
-        
+        """Load fields from the selected layer into the attribute table."""
         try:
-            self.layer = QgsProject.instance().mapLayersByName(self.dlg.comboLayer.currentText())[0]
-            self.fields_name = []        
+            self.layer = QgsProject.instance().mapLayersByName(
+                self.dlg.comboLayer.currentText())[0]
+            self.fields_name = []
 
-            fields = self.layer.fields()
-            for field in fields:
+            for field in self.layer.fields():
                 self.fields_name.append(field.name())
 
             self.fill_table(0)
@@ -437,170 +364,175 @@ class Layer2Triple:
             self.dlg.pushButtonSave.setEnabled(True)
 
             self.iface.messageBar().pushMessage(
-                "Success", "Load Layer fields",
-                level=Qgis.Success, duration=3
-            )
-        except Exception as e:
-            
-            self.iface.messageBar().pushMessage(
-            "Error", f"Erro {e} on loading layer",
-            level=Qgis.Warning, duration=3)
+                "Success", "Layer fields loaded successfully.",
+                level=Qgis.Success, duration=3)
 
+        except Exception as e:
+            QgsMessageLog.logMessage(
+                f'Error loading layer fields: {e}', 'Layer2Triple', level=Qgis.Critical)
+            self.iface.messageBar().pushMessage(
+                "Error", f"Could not load layer: {e}",
+                level=Qgis.Warning, duration=3)
 
     def update_comboLayer(self):
+        """Refresh the layer selection combo with current QGIS vector layers."""
         self.dlg.comboLayer.clear()
-
         for layer in QgsProject.instance().mapLayers().values():
             if type(layer) == QgsVectorLayer:
                 self.dlg.comboLayer.addItem(layer.name())
-                
 
-    def combo_changed(self,row, s):
-        if (s == "Layer Attribute"):
+    def combo_changed(self, row, s):
+        """Update the value widget in the attribute table based on selected mapping type."""
+        if s == "Layer Attribute":
             self.dlg.tableAttributes.setCellWidget(row, 2, comboBox_by_itens(self.fields_name))
-        elif (s == "Vocabulary"):
-            self.dlg.tableAttributes.setCellWidget(row, 2, comboBox_by_itens (self.class_concepts))
+        elif s == "Vocabulary":
+            self.dlg.tableAttributes.setCellWidget(row, 2, comboBox_by_itens(self.class_concepts))
         else:
             self.dlg.tableAttributes.setCellWidget(row, 2, QLineEdit())
 
+    def toURL(self, concept: str) -> URIRef:
+        """Convert a prefixed concept string (e.g. 'geo:asWKT') to a full URIRef.
 
-    def toURL (self, concept):    
-        prefix, predicate = concept.split(":")
+        Args:
+            concept: Prefixed concept string in 'prefix:localname' format.
+
+        Returns:
+            URIRef for the concept.
+
+        Raises:
+            ValueError: If concept does not contain a colon separator.
+            KeyError: If the prefix is not in the loaded namespaces.
+        """
+        if ':' not in concept:
+            raise ValueError(f"Invalid concept format '{concept}': expected 'prefix:localname'.")
+        prefix, predicate = concept.split(":", 1)
+        if prefix not in self.namespaces:
+            raise KeyError(f"Prefix '{prefix}' not found in loaded namespaces.")
         return self.namespaces[prefix][predicate]
-        
-
 
     def save_setting(self):
+        """Save current configuration (vocabularies, namespaces, UI state) to a JSON file."""
         try:
-            path =str(QFileDialog.getSaveFileName(caption="Defining output file", filter="JSON settings file(*.json)")[0])
+            path = str(QFileDialog.getSaveFileName(
+                caption="Defining output file",
+                filter="JSON settings file(*.json)")[0])
             if path:
+                settings = {
+                    "class_concepts": self.class_concepts,
+                    "properties_concepts": self.properties_concepts,
+                    "namespaces": self.namespaces,
+                    "tripleurl": self.dlg.lineURLBase.text(),
+                    "tripleprefix": self.dlg.linePrefix2.text(),
+                    "tripletype": self.dlg.comboRDFType.currentText(),
+                }
                 with open(path, "w") as file:
-                    # Grava o dicionário settings no arquivo JSON
-                    settings = {
-                        
-                                "class_concepts":self.class_concepts, 
-                                "properties_concepts":self.properties_concepts, 
-                                
-                                "namespaces": self.namespaces,
-                                "tripleurl": self.dlg.lineURLBase.text(),
-                                "tripleprefix": self.dlg.linePrefix2.text(),
-                                "tripletype": self.dlg.comboRDFType.currentText(),
-                            }
                     json.dump(settings, file)
                 self.iface.messageBar().pushMessage(
-                "Success",
-                f"Configuration file saved... at {path}",
-                level=Qgis.Success,
-                duration=3)
-                    
-        except Exception as e:
-            print(f'erro save_setting{e}')    
+                    "Success", f"Configuration saved at {path}",
+                    level=Qgis.Success, duration=3)
+
+        except (IOError, TypeError) as e:
+            QgsMessageLog.logMessage(
+                f'Error saving settings: {e}', 'Layer2Triple', level=Qgis.Critical)
             self.iface.messageBar().pushMessage(
-                "Error to saving settings file",
-                f"{e}",
-                level=Qgis.Warning,
-                duration=3
-            )      
-                
+                "Error", f"Could not save settings: {e}",
+                level=Qgis.Warning, duration=3)
+
     def open_setting(self):
+        """Load a previously saved configuration JSON file and restore UI state."""
         try:
-            path =str(QFileDialog.getOpenFileName(caption="Defining input file", filter="JSON settings file(*.json)")[0])
+            path = str(QFileDialog.getOpenFileName(
+                caption="Defining input file",
+                filter="JSON settings file(*.json)")[0])
             if path:
                 with open(path, "r") as file:
-
                     settings = json.loads(file.read())
-                    # resume state        
-                    self.namespaces = {k:  Namespace(v) for k, v in  settings["namespaces"].items() } #incluir o namespace
-                    self.class_concepts = settings["class_concepts"]
-                    self.properties_concepts = settings["properties_concepts"]
-                    
-                    self.fill_table(0)
 
-                    self.dlg.lineURLBase.setText(settings["tripleurl"])
-                    self.dlg.linePrefix2.setText(settings["tripleprefix"])
-                    self.dlg.comboRDFType.setCurrentText(settings["tripletype"])
+                self.namespaces = {k: Namespace(v) for k, v in settings["namespaces"].items()}
+                self.class_concepts = settings["class_concepts"]
+                self.properties_concepts = settings["properties_concepts"]
+
+                self.fill_table(0)
+
+                self.dlg.lineURLBase.setText(settings["tripleurl"])
+                self.dlg.linePrefix2.setText(settings["tripleprefix"])
+                self.dlg.comboRDFType.setCurrentText(settings["tripletype"])
+
                 self.iface.messageBar().pushMessage(
-                "Success",
-                f"File read successfully...",
-                level=Qgis.Success,
-                duration=3)
-                
-        except Exception as e:
-            print(f'erro open_setting{e}')    
+                    "Success", "Configuration loaded successfully.",
+                    level=Qgis.Success, duration=3)
+
+        except (IOError, KeyError, json.JSONDecodeError) as e:
+            QgsMessageLog.logMessage(
+                f'Error loading settings: {e}', 'Layer2Triple', level=Qgis.Critical)
             self.iface.messageBar().pushMessage(
-                "Erro on open settings file",
-                f"check {e} on file settings",
-                level=Qgis.Warning,
-                duration=3
-            )   
+                "Error", f"Could not open settings file: {e}",
+                level=Qgis.Warning, duration=3)
 
     def fill_table_from_task(self, exception, quant_concepts=None):
+        """Callback after vocabulary loading task completes."""
         if not exception:
-            self.fill_table(0)       
+            self.fill_table(0)
             self.iface.messageBar().clearWidgets()
             self.iface.messageBar().pushMessage(
                 "Success",
-                f"Configuration uploaded successfully...{quant_concepts} concepts loaded",
-                level=Qgis.Success,
-                duration=3
-            )
+                f"{quant_concepts} concepts loaded successfully.",
+                level=Qgis.Success, duration=3)
         else:
-           self.iface.messageBar().pushMessage(
-                "Erro on load Vocabulary",
-                f"{exception}",
-                level=Qgis.Warning,
-                duration=3
-            )
-        
-    # dicts atributos e vocabulários selecionados
+            QgsMessageLog.logMessage(
+                f'Vocabulary loading failed: {exception}', 'Layer2Triple', level=Qgis.Critical)
+            self.iface.messageBar().pushMessage(
+                "Error loading vocabulary", f"{exception}",
+                level=Qgis.Warning, duration=5)
+
     def read_selected_attributes(self):
+        """Collect selected attribute mappings from the UI table.
+
+        Returns:
+            Tuple of (mVocab, saveAttrs, save_constants) dicts.
+        """
         mVocab = {}
         saveAttrs = {}
         save_constants = {}
 
-        for row in range(self.dlg.tableAttributes.rowCount()): 
-            concept = self.dlg.tableAttributes.cellWidget(row, 0) 
-            if concept.isChecked():
+        for row in range(self.dlg.tableAttributes.rowCount()):
+            concept = self.dlg.tableAttributes.cellWidget(row, 0)
+            if not concept.isChecked():
+                continue
 
-                concept_text = concept.text()
-                
-                prefix, predicate = concept_text.split(":")
-                         
-                namespace_url = self.namespaces[prefix][predicate]
+            concept_text = concept.text()
+            namespace_url = self.toURL(concept_text)
+            _, predicate = concept_text.split(":", 1)
 
-                combo_type = self.dlg.tableAttributes.cellWidget(row, 1)
+            combo_type = self.dlg.tableAttributes.cellWidget(row, 1)
 
-                if combo_type.currentText() == "Layer Attribute":
-                    combo = self.dlg.tableAttributes.cellWidget(row, 2)
-                    attribute = combo.currentText()
-                    saveAttrs[attribute] = predicate
-                    mVocab[attribute] =  namespace_url
-                
-                elif combo_type.currentText() == "Vocabulary":
-                    combo = self.dlg.tableAttributes.cellWidget(row, 2)
-                    attribute = combo.currentText()
-                    url_v = self.toURL(attribute)
-                    save_constants[predicate] = url_v
-                    mVocab[predicate] =  namespace_url
-                else:
-                    line_edit = self.dlg.tableAttributes.cellWidget(row, 2)
-                    save_constants[predicate] = parse_ifs(line_edit.text())
-                    mVocab[predicate] =  namespace_url
+            if combo_type.currentText() == "Layer Attribute":
+                combo = self.dlg.tableAttributes.cellWidget(row, 2)
+                attribute = combo.currentText()
+                saveAttrs[attribute] = predicate
+                mVocab[attribute] = namespace_url
+
+            elif combo_type.currentText() == "Vocabulary":
+                combo = self.dlg.tableAttributes.cellWidget(row, 2)
+                attribute = combo.currentText()
+                url_v = self.toURL(attribute)
+                save_constants[predicate] = url_v
+                mVocab[predicate] = namespace_url
+            else:
+                line_edit = self.dlg.tableAttributes.cellWidget(row, 2)
+                save_constants[predicate] = parse_ifs(line_edit.text())
+                mVocab[predicate] = namespace_url
 
         return mVocab, saveAttrs, save_constants
-        
 
-    # features da Camada
     def get_layer_features(self):
+        """Return features from the active layer (selected or all)."""
         if self.dlg.checkSelected.isChecked():
-            features = self.layer.selectedFeatures() 
-        else:
-            features = self.layer.getFeatures()
+            return list(self.layer.selectedFeatures())
+        return list(self.layer.getFeatures())
 
-        return list(features)
-
-
-    def create_progress_dialog (self,title,total):
+    def create_progress_dialog(self, title, total):
+        """Create and return a progress dialog for long operations."""
         progressDialog = QProgressDialog(
             title, "Cancel", 0, 0, self.iface.mainWindow())
         progressDialog.setWindowTitle(title)
@@ -610,193 +542,197 @@ class Layer2Triple:
         progressDialog.setCancelButton(None)
         return progressDialog
 
-    # criação das triplas RDF
-    def create_rdf_triples(self, features, saveAttrs,mVocab):
+    def create_rdf_triples(self, features, saveAttrs, mVocab):
+        """Build a dict of RDF triples from layer features.
+
+        Args:
+            features: List of QgsFeature objects.
+            saveAttrs: Dict mapping layer attribute names to RDF predicates.
+            mVocab: Dict mapping predicates to their URIRef namespaces.
+
+        Returns:
+            Dict mapping resource IDs to attribute dicts.
+        """
         triples = {}
         total = len(features)
-        progressDialog = self.create_progress_dialog(f"Exporting features {total}", total)
+        progressDialog = self.create_progress_dialog(f"Exporting {total} features", total)
 
-        i = 1
-        for feature in features:
+        for i, feature in enumerate(features, start=1):
             triple = {}
             mVocab['asWkt'] = URIRef("http://www.opengis.net/ont/geosparql#asWKT")
+
             if self.dlg.checkGeometries.isChecked():
-                pol = QgsMultiPolygon()
-                pol.fromWkt(feature.geometry().asWkt())
-                triple['asWkt'] = pol.polygonN(0).asWkt()
+                # Use asWkt() directly to support all geometry types
+                triple['asWkt'] = feature.geometry().asWkt()
 
             for key in saveAttrs:
                 triple[key] = feature[key]
 
             if self.dlg.comboID.currentText() == "Layer Attribute":
-                attr = feature[self.dlg.comboAttributeID.currentText()]
-                triples[attr] = triple
+                resource_id = feature[self.dlg.comboAttributeID.currentText()]
             else:
-                triples[str(uuid.uuid4())] = triple
+                resource_id = str(uuid.uuid4())
+
+            triples[resource_id] = triple
 
             progressDialog.setValue(i)
-
-            progressDialog.setLabelText( "Exporting feature {} of {}".format(i, total))
+            progressDialog.setLabelText(f"Exporting feature {i} of {total}")
             QCoreApplication.processEvents()
-            i += 1
 
         return triples
 
-
-    def read_constants (self, save_constants, mVocab):
+    def read_constants(self, save_constants, mVocab):
+        """Convert constant attribute values to RDF predicate-object pairs."""
         constants_p_o = []
-        for key in save_constants:
-            attr = key
-            value = save_constants[key]
-            predicate = mVocab[attr]
+        for key, value in save_constants.items():
+            predicate = mVocab[key]
             if isinstance(value, URIRef):
-                object = value
+                obj = value
+            elif validade_url(str(value)):
+                obj = URIRef(value)
             else:
-                object = Literal(value)
-                if validade_url(value): # talvez deveria ver pelo schema
-                    object = URIRef(value)
-
-            constants_p_o.append((predicate, object))
+                obj = Literal(value)
+            constants_p_o.append((predicate, obj))
         return constants_p_o
 
-    def save_to_ttl (self, task, path, g):
-            s = g.serialize(format="turtle")
-
-            f = open(path, "w+", encoding="utf-8")
-            
+    def save_to_ttl(self, task, path, g):
+        """Serialize RDF graph to a Turtle file."""
+        s = g.serialize(format="turtle")
+        with open(path, "w+", encoding="utf-8") as f:
             f.write(s)
-            f.close()
-            
-        
 
-
-    def pos_save_to_ttl (self,path, exception, result= None):
+    def pos_save_to_ttl(self, path, exception, result=None):
+        """Callback after TTL file saving task completes."""
         self.iface.messageBar().clearWidgets()
-
         if not exception:
-
             self.iface.messageBar().pushMessage(
-                "Success", "Output file written at " + path,
-                    level=Qgis.Success, duration=3
-            )
+                "Success", f"File written at {path}",
+                level=Qgis.Success, duration=3)
         else:
-
+            QgsMessageLog.logMessage(
+                f'Error saving TTL file at {path}: {exception}',
+                'Layer2Triple', level=Qgis.Critical)
             self.iface.messageBar().pushMessage(
-                "Warning", "Error on save file written at " + path,
-                    level=Qgis.Warning, duration=3
-            )
+                "Error", f"Could not save file at {path}: {exception}",
+                level=Qgis.Warning, duration=3)
 
-    # criação do Grafo RDF
-    def create_rdf_graph(self,mainNamespace, save_constants,mVocab, path, triples):
- 
+    def create_rdf_graph(self, mainNamespace, save_constants, mVocab, path, triples):
+        """Build the RDF graph from triples and dispatch the TTL saving task.
+
+        Args:
+            mainNamespace: rdflib Namespace for observation subjects.
+            save_constants: Dict of constant predicate-value pairs.
+            mVocab: Dict mapping attribute names to URIRefs.
+            path: Output file path.
+            triples: Dict of resource IDs to attribute dicts.
+        """
         try:
             g = Graph()
 
             self.iface.messageBar().pushMessage(
-                "Info", "Saving file  at " + path,
-                    level=Qgis.Info, duration=100
-            )
-            
+                "Info", f"Building RDF graph for {path}...",
+                level=Qgis.Info, duration=10)
+
             g.bind(self.dlg.linePrefix2.text(), mainNamespace)
-        
+
             constants_p_o = self.read_constants(save_constants, mVocab)
-    
-            if self.dlg.checkConstant.isChecked(): # aggregar em um dataset, por exemplo
+
+            if self.dlg.checkConstant.isChecked():
                 aggregNamespace = Namespace(self.dlg.lineURLBase_2.text())
                 g.bind(self.dlg.linePrefix2_2.text(), aggregNamespace)
-
-                aggregate = aggregNamespace[str(uuid.uuid4())] 
-                attribute = self.dlg.comboRDFType_2.currentText()
-                url_aggregate = self.toURL(attribute)
-
+                aggregate = aggregNamespace[str(uuid.uuid4())]
+                url_aggregate = self.toURL(self.dlg.comboRDFType_2.currentText())
                 g.add((aggregate, RDF.type, url_aggregate))
-
                 for (p, o) in constants_p_o:
                     g.add((aggregate, p, o))
 
             for prefix, name in self.namespaces.items():
                 g.bind(prefix, name)
 
-            
-            total = len (triples)
-            progressDialog = self.create_progress_dialog(f"Saving graph {total}", total)
+            total = len(triples)
+            progressDialog = self.create_progress_dialog(f"Saving graph ({total} resources)", total)
 
-            i = 1
-            for id, attributes in triples.items():
-                
-                subject = mainNamespace[id]
-                attribute = self.dlg.comboRDFType.currentText()
-                url_v = self.toURL(attribute)
+            for i, (resource_id, attributes) in enumerate(triples.items(), start=1):
+                subject = mainNamespace[resource_id]
+                url_v = self.toURL(self.dlg.comboRDFType.currentText())
                 g.add((subject, RDF.type, url_v))
-                
+
                 for attr, value in attributes.items():
                     predicate = mVocab[attr]
-                    object = Literal(value)
-                    if (validade_url(value)):# talvez deveria ver pelo schema
-                        object = URIRef(value)
+                    if validade_url(str(value)):
+                        obj = URIRef(value)
+                    else:
+                        obj = Literal(value)
+                    g.add((subject, predicate, obj))
 
-                    g.add((subject, predicate, object))
-                    
-
-                if self.dlg.checkConstant.isChecked(): # agregar em um dataset, por exemplo
-                    attribute_p = self.dlg.comboBoxPredicate.currentText()
-                    url_p = self.toURL(attribute_p)
+                if self.dlg.checkConstant.isChecked():
+                    url_p = self.toURL(self.dlg.comboBoxPredicate.currentText())
                     g.add((subject, url_p, aggregate))
                 else:
                     for (p, o) in constants_p_o:
                         g.add((subject, p, o))
 
-                
                 progressDialog.setValue(i)
-
-                progressDialog.setLabelText( "Saving graph {} of {}".format(i, total))
+                progressDialog.setLabelText(f"Saving resource {i} of {total}")
                 QCoreApplication.processEvents()
-                i += 1
 
-
-
-
-    
-
-            QgsMessageLog.logMessage('Task to save ttl file', 'Layer2Triple')                                        
-            self.task = QgsTask.fromFunction('Saving TTL file...', 
-                    self.save_to_ttl, 
-                    path=path, g=g, 
-                    on_finished=partial(self.pos_save_to_ttl, path)) 
-    
+            QgsMessageLog.logMessage('Dispatching TTL save task.', 'Layer2Triple')
+            self.task = QgsTask.fromFunction(
+                'Saving TTL file...',
+                self.save_to_ttl,
+                path=path, g=g,
+                on_finished=partial(self.pos_save_to_ttl, path))
             QgsApplication.taskManager().addTask(self.task)
 
-  
+        except (ValueError, KeyError) as e:
+            QgsMessageLog.logMessage(
+                f'Error building RDF graph: {e}', 'Layer2Triple', level=Qgis.Critical)
+            self.iface.messageBar().pushMessage(
+                "Error", f"Failed to build RDF graph: {e}",
+                level=Qgis.Warning, duration=5)
+        except Exception as e:
+            QgsMessageLog.logMessage(
+                f'Unexpected error in create_rdf_graph: {e}', 'Layer2Triple', level=Qgis.Critical)
+            self.iface.messageBar().pushMessage(
+                "Error", f"Unexpected error: {e}",
+                level=Qgis.Warning, duration=5)
 
-
-        except:
-            pass
-
-            
-    # metodo principal para save_file
     def save_file(self):
-        try:                                                                                       
-            path = str(QFileDialog.getSaveFileName(caption="Defining output file", filter="Terse RDF Triple Language(*.ttl);;XML Files (*.xml)")[0])
-            if path:
-                mVocab, saveAttrs, save_constants = self.read_selected_attributes()
-                features = self.get_layer_features()  
-            
-                url_main = self.dlg.lineURLBase.text()
-                mainNamespace = Namespace(url_main)
-                    
-                triples = self.create_rdf_triples(features, saveAttrs,mVocab)
-                self.create_rdf_graph(mainNamespace, save_constants,mVocab, path , triples) 
+        """Main export method: collect attributes, build triples and save to file."""
+        try:
+            path = str(QFileDialog.getSaveFileName(
+                caption="Defining output file",
+                filter="Terse RDF Triple Language(*.ttl);;XML Files (*.xml)")[0])
+            if not path:
+                return
 
+            mVocab, saveAttrs, save_constants = self.read_selected_attributes()
 
+            if not saveAttrs and not save_constants:
+                self.iface.messageBar().pushMessage(
+                    "Warning", "No attributes selected for export.",
+                    level=Qgis.Warning, duration=3)
+                return
+
+            url_main = self.dlg.lineURLBase.text().strip()
+            if not url_main:
+                self.iface.messageBar().pushMessage(
+                    "Warning", "Base URL is required before exporting.",
+                    level=Qgis.Warning, duration=3)
+                return
+
+            features = self.get_layer_features()
+            mainNamespace = Namespace(url_main)
+            triples = self.create_rdf_triples(features, saveAttrs, mVocab)
+            self.create_rdf_graph(mainNamespace, save_constants, mVocab, path, triples)
 
         except Exception as e:
+            QgsMessageLog.logMessage(
+                f'Error in save_file: {e}', 'Layer2Triple', level=Qgis.Critical)
             self.iface.messageBar().pushMessage(
-                "Error",
-                f"error {e} to save file",
-                level=Qgis.Warning,
-                duration=3
-            )
-        
-                
+                "Error", f"Export failed: {e}",
+                level=Qgis.Warning, duration=3)
+
     def close(self):
+        """Hide the main plugin dialog."""
         self.dlg.setVisible(False)
